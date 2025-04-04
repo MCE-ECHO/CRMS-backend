@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Timetable</title>
+    <link rel="stylesheet" href="{% static 'css/timetable.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h2>Classroom Timetable</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Block Name</th>
+                    <th>Room No</th>
+                    <th>Course</th>
+                    <th>Faculty</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for timeclass in timetable %}
+                <tr>
+                    <td>{{ timeclass.block_name }}</td>
+                    <td>{{ timeclass.room_no }}</td>
+                    <td>{{ timeclass.course_name }}</td>
+                    <td>{{ timeclass.faculty }}</td>
+                    <td>{{ timeclass.start_time }}</td>
+                    <td>{{ timeclass.end_time }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
