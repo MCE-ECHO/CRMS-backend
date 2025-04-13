@@ -1,5 +1,6 @@
 from django.urls import path
-from . import views
+from .views import TeacherTimetableView
+
 urlpatterns = [
-     path('',views.timetable_view,name='timetable')
+    path('teacher/<int:user_id>/timetable/', TeacherTimetableView.as_view(), name='teacher-timetable'),
 ]
