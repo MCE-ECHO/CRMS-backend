@@ -1,11 +1,16 @@
+{% extends 'base.html' %}
 {% load static %}
-{% extends "base.html" %}
 
 {% block title %}Teacher Dashboard{% endblock %}
 
 {% block content %}
-  <h2>Welcome, {{ profile.user.get_full_name }}</h2>
-  <h3>Department: {{ profile.department }}</h3>
+  <h2>Welcome, {{ request.user.get_full_name }}</h2>
+  {% if profile %}
+      <h3>Department: {{ profile.department }}</h3>
+  {% else %}
+      <h3>No profile information available.</h3>
+  {% endif %}
+
   <h4>Your Timetable</h4>
   <table>
     <thead>
@@ -27,6 +32,7 @@
       {% endfor %}
     </tbody>
   </table>
+
   <h4>Upcoming Bookings</h4>
   <table>
     <thead>

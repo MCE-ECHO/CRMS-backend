@@ -7,7 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security settings
 SECRET_KEY = 'django-insecure-a-d0ijp6v4p&2^m=7y0i22w$s$v=^4#a*l$_57h5ppk!-b7=-4'
 DEBUG = True
-ALLOWED_HOSTS = ['*']  # Allow all hosts during development.  # THIS IS OKAY FOR DEVELOPMENT ONLY.  In production, specify allowed domains.
+ALLOWED_HOSTS = ['*']  # Change this in production
 
 # Application definition
 INSTALLED_APPS = [
@@ -50,6 +50,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.request',  # Make sure 'request' is included
             ],
         },
     },
@@ -83,7 +84,7 @@ USE_TZ = True
 # Static files settings
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Add this line for deployment
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # For collecting static files
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
