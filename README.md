@@ -1,97 +1,262 @@
-
 # 🏫 College Classroom Management System
 
 [![Django](https://img.shields.io/badge/Django-4.2-brightgreen)](https://www.djangoproject.com/)
 [![DRF](https://img.shields.io/badge/Django_REST-3.15-blue)](https://www.django-rest-framework.org/)
+[![GitHub Issues](https://img.shields.io/badge/Report_Issues-Here-red)](https://github.com/Rakshak-D/CLASSROOMS/issues)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A Django-based system for managing classroom bookings, timetables, and admin analytics.
+A comprehensive Django-based solution for optimizing classroom resource management, featuring real-time analytics, conflict-free booking system, and multi-role access control.
 
-![Dashboard Preview](https://via.placeholder.com/1500x600.png?text=Admin+Dashboard+Preview)
+![System Overview](https://via.placeholder.com/1500x600.png?text=Admin+Dashboard+Interface+Preview)
 
 ---
 
-## ✨ Features
+## ✨ Key Features
 
-- **Admin Dashboard**:  
-  📊 Real-time charts for classroom usage, peak hours, and faculty activity  
-- **Booking Management**:  
-  ✅ Approve/reject requests • 🕒 Conflict detection • 📅 Availability checker  
-- **Timetable Operations**:  
-  📥 Bulk CSV/Excel upload • ✏️ Edit entries • 📤 Export to CSV  
-- **Security**:  
-  🔒 Role-based access • 🛡️ CSRF protection  
+### 📊 Admin Dashboard
+- Real-time classroom utilization heatmaps
+- Faculty workload distribution charts
+- Instant booking approvals/rejections
+- System health monitoring
+
+### 🗓️ Booking Management
+- Smart conflict detection algorithm
+- Multi-criteria availability search
+- Historical booking analysis
+- Automated email notifications
+
+### ⏰ Timetable Operations
+- Bulk CSV/Excel import with validation
+- Interactive drag-drop timetable editor
+- Cross-platform export (PDF/CSV/Excel)
+- Teacher schedule optimization
+
+### 👨🎓 Student Portal
+- Real-time classroom status updates
+- Course timetable browser
+- Booking request submission
+- Mobile-first responsive design
+
+### 🔐 Security
+- Role-based access control (RBAC)
+- CSRF-protected API endpoints
+- Session timeout enforcement
+- Password complexity policies
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Clone & Install
+### Prerequisites
+- Python 3.9+
+- PostgreSQL 14+
+- Node.js 18+ (for frontend build)
+
 ```bash
+# Clone repository
 git clone https://github.com/Rakshak-D/CLASSROOMS.git
 cd CLASSROOMS
-pip install -r requirements.txt
-```
 
-### 2. Configure Database
-```bash
+# Set up environment
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+.venv\Scripts\activate     # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure environment
+echo "SECRET_KEY=your-secret-key" > .env
+echo "DEBUG=True" >> .env
+
+# Database setup
 python manage.py migrate
 python manage.py createsuperuser
-```
 
-### 3. Run Server
-```bash
+# Start server
 python manage.py runserver
 ```
-Access: `http://localhost:8000/admin-dashboard/`
+
+**Access Endpoints:**
+- Admin Dashboard: `http://localhost:8000/admin-dashboard/`
+- Teacher Portal: `http://localhost:8000/teacher/`
+- Student Portal: `http://localhost:8000/student/`
+- API Documentation: `http://localhost:8000/api/docs/`
 
 ---
 
-## 🛠 Tech Stack
+## 🌐 System Overview
 
-| Category       | Technologies                                |
-|----------------|---------------------------------------------|
-| **Frontend**   | HTML • CSS • Chart.js • SweetAlert2         |
-| **Backend**    | Django • Django REST Framework              |
-| **Database**   | SQLite (Default) • PostgreSQL (Production)  |
-| **Data Tools** | Pandas • OpenPyXL                           |
+### Architecture Diagram
+```mermaid
+graph TD
+    A[User] --> B{Authentication}
+    B -->|Admin| C[Analytics Dashboard]
+    B -->|Teacher| D[Booking Manager]
+    B -->|Student| E[Availability Checker]
+    C --> F[Reporting Engine]
+    D --> G[Conflict Detector]
+    E --> H[Timetable Viewer]
+    F --> I[(PostgreSQL)]
+    G --> I
+    H --> I
+```
+
+### Data Flow
+```mermaid
+sequenceDiagram
+    participant User
+    participant System
+    participant DB
+    
+    User->>System: Login Request
+    System->>DB: Authenticate
+    DB-->>System: User Data
+    System->>User: Render Dashboard
+    
+    User->>System: Booking Request
+    System->>System: Check Conflicts
+    alt Available
+        System->>DB: Create Booking
+        DB-->>System: Success
+        System->>User: Confirmation
+    else Conflict
+        System->>User: Suggest Alternatives
+    end
+```
+
+---
+
+## 🛠 Technology Stack
+
+| Component       | Technologies                                |
+|-----------------|--------------------------------------------|
+| **Frontend**    | HTML5, CSS3, JavaScript, Chart.js          |
+| **Backend**     | Django 4.2, Django REST Framework          |
+| **Database**    | PostgreSQL, SQLite (Development)           |
+| **Security**    | CSRF Tokens, HTTPS, PBKDF2 Hashing         |
+| **DevOps**      | Docker, Nginx, GitHub Actions              |
+| **Analytics**   | Pandas, Matplotlib, OpenPyXL               |
 
 ---
 
 ## 📂 Repository Structure
+
 ```
 CLASSROOMS/
-├── accounts/          # Authentication
-├── admin_dashboard/   # Dashboard logic & templates
-├── booking/           # Booking models/views
-├── classroom/         # Classroom management
-├── timetables/        # Timetable CRUD operations
-├── requirements.txt   # Dependencies
-└── .gitignore         # Ignored files
+├── accounts/          # Authentication system
+│   ├── models/        # Custom user models
+│   ├── auth/          # Authentication backends
+│   └── signals.py     # Profile signals
+├── analytics/         # Data analysis
+│   ├── reports/       # PDF generators
+│   └── visualizations # Chart templates
+├── booking/           # Reservation system
+│   ├── api/           # REST endpoints
+│   └── algorithms/    # Conflict detection
+├── classroom/         # Resource management
+│   ├── validators/    # Capacity checks
+│   └── fixtures/      # Initial data
+├── static/            # Static assets
+│   ├── js/            # Interactive components
+│   └── scss/          # Style preprocessing
+└── templates/         # UI components
+    ├── components/    # Reusable widgets
+    └── layouts/       # Page templates
 ```
 
 ---
 
-## 📝 Requirements
-**requirements.txt** (root directory):
+## 📝 Core Dependencies
+
 ```text
+# Base Requirements
 Django==4.2.11
 djangorestframework==3.15.1
 pandas==2.2.1
+python-dotenv==1.0.0
+
+# Security
+bcrypt==4.0.1
+django-csp==3.1
+
+# Data Handling
 openpyxl==3.1.2
 python-dateutil==2.9.0
 ```
 
 ---
 
-## 📜 License
-MIT License - See [LICENSE](LICENSE) for details.
+## 🐛 Issue Reporting
+
+[![GitHub Issues](https://img.shields.io/badge/Report_Issues-Here-red)](https://github.com/Rakshak-D/CLASSROOMS/issues)
+
+**Bug Report Template:**
+```markdown
+## Description
+[Clear explanation of the issue]
+
+## Reproduction Steps
+1. Navigate to...
+2. Click on...
+3. Observe...
+
+**Expected Behavior**  
+[Expected outcome]
+
+**Actual Behavior**  
+[Actual outcome]
+
+**Environment**  
+- OS: [e.g., Ubuntu 22.04]
+- Browser: [e.g., Firefox 120]
+- Django Version: 4.2.11
+
+**Additional Context**  
+[Screenshots/Logs]
+```
+
+**Issue Labels**  
+- `bug` - Functional errors
+- `feature` - New capability requests
+- `security` - Vulnerability reports
+- `docs` - Documentation improvements
 
 ---
 
-## 📧 Contact
-**Rakshak D**  
+## 📜 License
+
+This project is licensed under the MIT License - see [LICENSE](LICENSE) for complete terms.
+
+---
+
+## 📬 Contact & Support
+
+**Project Maintainer**  
+Rakshak D  
 📧 rakshakmce@gmail.com  
-🔗 [GitHub Profile - Rakshak-D](https://github.com/Rakshak-D)
+🔗 [GitHub Profile](https://github.com/Rakshak-D)  
+
+
+## 🛠️ Development Roadmap
+
+### Next Milestones
+- 🗓️ Calendar Sync (iCal/Google)
+- 📱 Progressive Web App Conversion
+- 🤖 AI-powered Booking Suggestions
+- 🌐 Multi-language Support
+
+### Contribution Guide
+1. Fork repository
+2. Create feature branch (`git checkout -b feat/awesome-feature`)
+3. Commit changes (`git commit -am 'Add awesome feature'`)
+4. Push to branch (`git push origin feat/awesome-feature`)
+5. Open Pull Request
+
+**Code Standards**  
+- Follow PEP8 guidelines
+- Maintain 90%+ test coverage
+- Document complex algorithms
+- Use conventional commits
 
 ---
