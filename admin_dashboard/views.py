@@ -5,7 +5,7 @@ from django.db.models import Count
 from django.db.models.functions import ExtractHour
 from django.contrib.auth.models import User
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import user_passes_test
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
@@ -15,6 +15,7 @@ from rest_framework import serializers, status
 from timetable.models import Timetable
 from classroom.models import Classroom
 from booking.models import Booking
+from .forms import UploadFileForm  # Import UploadFileForm
 
 def is_admin(user):
     return user.is_staff or user.is_superuser
@@ -25,11 +26,11 @@ def admin_dashboard_view(request):
 
 class TimetableUploadView(APIView):
     parser_classes = [MultiPartParser]
-    
+
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
-        
+
         file = request.FILES.get('file')
         if not file:
             return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
@@ -42,7 +43,7 @@ class TimetableUploadView(APIView):
             for _, row in df.iterrows():
                 try:
                     classroom = Classroom.objects.get(name=row['classroom'])
-                    teacher = User.objects.get(username=row['teacher_username'])
+                    teacher = User.objects.get(username=row['teacher'])
                     start_time = datetime.strptime(row['start_time'], '%H:%M').time()
                     end_time = datetime.strptime(row['end_time'], '%H:%M').time()
                     Timetable.objects.create(
@@ -56,17 +57,20 @@ class TimetableUploadView(APIView):
                 except Classroom.DoesNotExist:
                     errors.append(f"Classroom '{row['classroom']}' not found")
                 except User.DoesNotExist:
-                    errors.append(f"Teacher '{row['teacher_username']}' not found")
+                    errors.append(f"Teacher '{row['teacher']}' not found")
                 except ValueError:
                     errors.append(f"Invalid time format for classroom {row['classroom']}")
+                except Exception as e:
+                   errors.append(f"Error processing row: {e}")
+
 
             if errors:
                 return Response({
                     "message": f"Partial success: {success_count} entries added",
                     "errors": errors
                 }, status=status.HTTP_207_MULTI_STATUS)
-                
-            return Response({"message": f"{success_count} entries added successfully"}, 
+
+            return Response({"message": f"{success_count} entries added successfully"},
                           status=status.HTTP_201_CREATED)
 
         except Exception as e:
@@ -219,10 +223,10 @@ def teacher_list(request):
 def export_timetable_csv(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="timetable_export.csv"'
-    
+
     writer = csv.writer(response)
     writer.writerow(['Day', 'Start Time', 'End Time', 'Classroom', 'Teacher'])
-    
+
     try:
         for row in Timetable.objects.select_related('classroom', 'teacher'):
             writer.writerow([

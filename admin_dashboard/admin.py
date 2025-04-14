@@ -53,7 +53,7 @@ class BookingAdmin(admin.ModelAdmin):
     def time_slot(self, obj):
         return f"{obj.start_time.strftime('%H:%M')} - {obj.end_time.strftime('%H:%M')}"
     time_slot.short_description = 'Time Slot'
-    
+
     def status_badge(self, obj):
         colors = {
             'pending': 'orange',
@@ -66,11 +66,11 @@ class BookingAdmin(admin.ModelAdmin):
             obj.status.capitalize()
         )
     status_badge.short_description = 'Status'
-    
+
     @admin.action(description='Approve selected bookings')
     def approve_selected(self, request, queryset):
         queryset.update(status='approved')
-    
+
     @admin.action(description='Reject selected bookings')
     def reject_selected(self, request, queryset):
         queryset.update(status='rejected')
