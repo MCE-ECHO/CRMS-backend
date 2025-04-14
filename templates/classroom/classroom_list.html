@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Classrooms{% endblock %}
+
+{% block content %}
+    <h1>Classrooms</h1>
+    <ul>
+        {% for classroom in classrooms %}
+            <li>{{ classroom.name }} - {{ classroom.block.name }} - Status: {{ classroom.status }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
+
