@@ -1,158 +1,176 @@
-{% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Admin Dashboard{% endblock %}
-
-{% block content %}
-    <h1>College Classroom Management Dashboard</h1>
-
-    <!-- Statistics Charts -->
-    <div class="chart-container">
-        <h2>Classroom Usage Statistics</h2>
-        <canvas id="usageChart"></canvas>
-    </div>
-
-    <div class="chart-container">
-        <h2>Peak Usage Hours</h2>
-        <canvas id="peakHoursChart"></canvas>
-    </div>
-
-    <div class="chart-container">
-        <h2>Faculty Activity</h2>
-        <canvas id="activeFacultyChart"></canvas>
-    </div>
-
-    <!-- Classroom Availability Search -->
-    <div class="chart-container">
-        <h2>Find Available Classrooms</h2>
-        <form id="availabilityForm" class="form-group">
-            <input type="date" name="date" required>
-            <input type="time" name="start_time" required>
-            <input type="time" name="end_time" required>
-            <input type="text" name="block" placeholder="Block Filter">
-            <button type="submit">Search</button>
-        </form>
-        <table id="availabilityTable" style="display:none;">
-            <thead><tr><th>Classroom Name</th><th>Block</th></tr></thead>
-            <tbody></tbody>
-        </table>
-    </div>
-
-    <!-- Pending Bookings -->
-    <div class="chart-container">
-        <h2>Pending Booking Requests</h2>
-        <table id="bookingTable">
-            <thead><tr><th>User</th><th>Classroom</th><th>Date</th><th>Time Slot</th><th>Actions</th></tr></thead>
-            <tbody></tbody>
-        </table>
-    </div>
-
-    <!-- Timetable Management -->
-    <div class="chart-container">
-        <h2>Timetable Management
-            <button class="export" onclick="exportCSV()">Export to CSV</button>
-        </h2>
-        <div class="loading" id="timetableLoading">Loading timetable data...</div>
-        <table id="timetableTable" style="display:none;">
-            <thead><tr><th>Day</th><th>Start Time</th><th>End Time</th><th>Classroom</th><th>Teacher</th><th>Actions</th></tr></thead>
-            <tbody></tbody>
-        </table>
-    </div>
-
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        function getCSRFToken() {
-            return document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
-        }
+    <style>
+        body { font-family: Arial; padding: 2rem; background: #f9f9f9; }
+        h1, h2 { color: #333; margin-bottom: 1.5rem; }
+        .chart-container { margin-bottom: 3rem; background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { padding: 1rem; border: 1px solid #eee; text-align: center; }
+        th { background: #f8f9fa; font-weight: 600; }
+        button { padding: 0.5rem 1rem; margin: 0.2rem; border-radius: 4px; border: none; cursor: pointer; transition: opacity 0.2s; }
+        button:hover { opacity: 0.85; }
+        .approve { background: #4CAF50; color: white; }
+        .reject { background: #f44336; color: white; }
+        .edit { background: #ffc107; color: black; }
+        .delete { background: #dc3545; color: white; }
+        .export { background: #007bff; color: white; float: right; }
+        .loading { text-align: center; padding: 2rem; color: #666; }
+        .form-group { margin: 1rem 0; display: flex; gap: 1rem; align-items: center; }
+        input, select { padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>College Classroom Management Dashboard</h1><!-- Statistics Charts -->
+<div class="chart-container">
+    <h2>Classroom Usage Statistics</h2>
+    <canvas id="usageChart"></canvas>
+</div>
 
-        function initCharts() {
-            fetch('/admin-dashboard/usage/').then(res => res.json()).then(data => {
-                new Chart(document.getElementById('usageChart'), {
-                    type: 'bar',
-                    data: { labels: data.labels, datasets: [{ label: 'Bookings Count', data: data.data, backgroundColor: 'rgba(54, 162, 235, 0.6)' }] }
-                });
-            });
-            fetch('/admin-dashboard/peak-hours/').then(res => res.json()).then(data => {
-                new Chart(document.getElementById('peakHoursChart'), {
-                    type: 'line',
-                    data: { labels: data.labels, datasets: [{ label: 'Bookings per Hour', data: data.data, borderColor: 'rgba(255, 99, 132, 1)', fill: false }] }
-                });
-            });
-            fetch('/admin-dashboard/active-faculty/').then(res => res.json()).then(data => {
-                new Chart(document.getElementById('activeFacultyChart'), {
-                    type: 'pie',
-                    data: { labels: data.labels, datasets: [{ data: data.data, backgroundColor: ['#4CAF50', '#2196F3', '#ff9800', '#e91e63'] }] }
-                });
-            });
-        }
+<div class="chart-container">
+    <h2>Peak Usage Hours</h2>
+    <canvas id="peakHoursChart"></canvas>
+</div>
 
-        document.getElementById('availabilityForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const params = new URLSearchParams(formData).toString();
-            fetch(`/admin-dashboard/available-classrooms/?${params}`)
-            .then(res => res.json())
-            .then(data => {
-                const tbody = document.querySelector('#availabilityTable tbody');
-                tbody.innerHTML = data.map(i => `<tr><td>${i.name}</td><td>${i.block}</td></tr>`).join('');
-                document.getElementById('availabilityTable').style.display = 'table';
-            })
-            .catch(() => Swal.fire('Error', 'Could not fetch availability data', 'error'));
+<div class="chart-container">
+    <h2>Faculty Activity</h2>
+    <canvas id="activeFacultyChart"></canvas>
+</div>
+
+<!-- Classroom Availability Search -->
+<div class="chart-container">
+    <h2>Find Available Classrooms</h2>
+    <form id="availabilityForm" class="form-group">
+        <input type="date" name="date" required>
+        <input type="time" name="start_time" required>
+        <input type="time" name="end_time" required>
+        <input type="text" name="block" placeholder="Block Filter">
+        <button type="submit">Search</button>
+    </form>
+    <table id="availabilityTable" style="display:none;">
+        <thead><tr><th>Classroom Name</th><th>Block</th></tr></thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<!-- Pending Bookings -->
+<div class="chart-container">
+    <h2>Pending Booking Requests</h2>
+    <table id="bookingTable">
+        <thead><tr><th>User</th><th>Classroom</th><th>Date</th><th>Time Slot</th><th>Actions</th></tr></thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<!-- Timetable Management -->
+<div class="chart-container">
+    <h2>Timetable Management 
+        <button class="export" onclick="exportCSV()">Export to CSV</button>
+    </h2>
+    <div class="loading" id="timetableLoading">Loading timetable data...</div>
+    <table id="timetableTable" style="display:none;">
+        <thead><tr><th>Day</th><th>Start Time</th><th>End Time</th><th>Classroom</th><th>Teacher</th><th>Actions</th></tr></thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script>
+    function getCSRFToken() {
+        return document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+    }
+
+    function initCharts() {
+        fetch('/admin-dashboard/usage/').then(res => res.json()).then(data => {
+            new Chart(document.getElementById('usageChart'), {
+                type: 'bar',
+                data: { labels: data.labels, datasets: [{ label: 'Bookings Count', data: data.data, backgroundColor: 'rgba(54, 162, 235, 0.6)' }] }
+            });
         });
-
-        function loadPendingBookings() {
-            fetch('/admin-dashboard/pending-bookings/')
-            .then(res => res.json())
-            .then(data => {
-                const tbody = document.querySelector('#bookingTable tbody');
-                tbody.innerHTML = '';
-                data.forEach(b => {
-                    tbody.innerHTML += `<tr>
-                        <td>${b.user}</td>
-                        <td>${b.classroom}</td>
-                        <td>${b.date}</td>
-                        <td>${b.start_time} - ${b.end_time}</td>
-                        <td>
-                            <button class="approve" onclick="handleBookingAction(${b.id}, 'approve')">Approve</button>
-                            <button class="reject" onclick="handleBookingAction(${b.id}, 'reject')">Reject</button>
-                        </td>
-                    </tr>`;
-                });
+        fetch('/admin-dashboard/peak-hours/').then(res => res.json()).then(data => {
+            new Chart(document.getElementById('peakHoursChart'), {
+                type: 'line',
+                data: { labels: data.labels, datasets: [{ label: 'Bookings per Hour', data: data.data, borderColor: 'rgba(255, 99, 132, 1)', fill: false }] }
             });
-        }
-
-        function handleBookingAction(id, action) {
-            Swal.fire({ title: `${action} this booking?`, icon: 'warning', showCancelButton: true })
-            .then(result => {
-                if (result.isConfirmed) {
-                    fetch(`/admin-dashboard/${action}-booking/${id}/`, {
-                        method: 'POST',
-                        headers: { 'X-CSRFToken': getCSRFToken() }
-                    })
-                    .then(() => Swal.fire('Success', `Booking ${action}ed`, 'success'))
-                    .then(loadPendingBookings);
-                }
+        });
+        fetch('/admin-dashboard/active-faculty/').then(res => res.json()).then(data => {
+            new Chart(document.getElementById('activeFacultyChart'), {
+                type: 'pie',
+                data: { labels: data.labels, datasets: [{ data: data.data, backgroundColor: ['#4CAF50', '#2196F3', '#ff9800', '#e91e63'] }] }
             });
-        }
+        });
+    }
 
-        function loadTimetable() {
-            fetch('/admin-dashboard/timetable/')
-            .then(res => res.json())
-            .then(data => {
-                const tbody = document.querySelector('#timetableTable tbody');
-                tbody.innerHTML = data.map(item => `
-                    <tr data-id="${item.id}">
-                        <td><input value="${item.day}"></td>
-                        <td><input type="time" value="${item.start_time}"></td>
-                        <td><input type="time" value="${item.end_time}"></td>
-                        <td><input value="${item.classroom}"></td>
-                        <td><input value="${item.teacher}"></td>
-                        <td>
-                            <button class="edit" onclick="saveTimetable(${item.id})">Save</button>
-                            <button class="delete" onclick="deleteTimetable(${item.id})">Delete</button>
-                        </td>
-                    </tr>`).join('');
+    document.getElementById('availabilityForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const params = new URLSearchParams(formData).toString();
+        fetch(`/admin-dashboard/available-classrooms/?${params}`)
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.querySelector('#availabilityTable tbody');
+            tbody.innerHTML = data.map(i => `<tr><td>${i.name}</td><td>${i.block}</td></tr>`).join('');
+            document.getElementById('availabilityTable').style.display = 'table';
+        })
+        .catch(() => Swal.fire('Error', 'Could not fetch availability data', 'error'));
+    });
+
+    function loadPendingBookings() {
+        fetch('/admin-dashboard/pending-bookings/')
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.querySelector('#bookingTable tbody');
+            tbody.innerHTML = '';
+            data.forEach(b => {
+                tbody.innerHTML += `<tr>
+                    <td>${b.user}</td>
+                    <td>${b.classroom}</td>
+                    <td>${b.date}</td>
+                    <td>${b.start_time} - ${b.end_time}</td>
+                    <td>
+                        <button class="approve" onclick="handleBookingAction(${b.id}, 'approve')">Approve</button>
+                        <button class="reject" onclick="handleBookingAction(${b.id}, 'reject')">Reject</button>
+                    </td>
+                </tr>`;
+            });
+        });
+    }
+
+    function handleBookingAction(id, action) {
+        Swal.fire({ title: `${action} this booking?`, icon: 'warning', showCancelButton: true })
+        .then(result => {
+            if (result.isConfirmed) {
+                fetch(`/admin-dashboard/${action}-booking/${id}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCSRFToken() }
+                })
+                .then(() => Swal.fire('Success', `Booking ${action}ed`, 'success'))
+                .then(loadPendingBookings);
+            }
+        });
+    }
+
+    function loadTimetable() {
+        fetch('/admin-dashboard/timetable/')
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.querySelector('#timetableTable tbody');
+            tbody.innerHTML = data.map(item => `
+                <tr data-id="${item.id}">
+                    <td><input value="${item.day}"></td>
+                    <td><input type="time" value="${item.start_time}"></td>
+                    <td><input type="time" value="${item.end_time}"></td>
+                    <td><input value="${item.classroom}"></td>
+                    <td><input value="${item.teacher}"></td>
+                    <td>
+                        <button class="edit" onclick="saveTimetable(${item.id})">Save</button>
+                        <button class="delete" onclick="deleteTimetable(${item.id})">Delete</button>
+                    </td>
+                </tr>`).join('');
             document.getElementById('timetableTable').style.display = 'table';
             document.getElementById('timetableLoading').style.display = 'none';
         });
@@ -196,5 +214,6 @@
     });
 </script>
 
-{% endblock %}
+</body>
+</html>
 
