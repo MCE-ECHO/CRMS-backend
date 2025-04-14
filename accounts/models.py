@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 
 class TeacherProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='teacherprofile')
     department = models.CharField(max_length=100, blank=True)
 
     def __str__(self):
@@ -10,3 +10,4 @@ class TeacherProfile(models.Model):
 
     def is_teacher(self):
         return True
+

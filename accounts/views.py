@@ -19,9 +19,9 @@ def home_redirect_view(request):
         if is_admin(request.user):
             return redirect('/admin-dashboard/')
         elif is_teacher(request.user):
-            return redirect('/accounts/teacher/dashboard/')
+            return redirect('teacher-dashboard')
         else:
-            return redirect('/accounts/student/portal/')
+            return redirect('student-portal')
     return render(request, 'home.html')  # fallback for not-logged-in users
 
 # Teacher Dashboard View
@@ -56,7 +56,7 @@ def student_timetable_view(request):
     """
     # Get the classroom name from the query parameters
     class_name = request.GET.get('classroom')
-    
+
     # Handle missing classroom parameter
     if not class_name:
         return JsonResponse({'error': 'Missing classroom parameter'}, status=400)

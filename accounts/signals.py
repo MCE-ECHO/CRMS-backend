@@ -7,3 +7,4 @@ from .models import TeacherProfile
 def create_teacher_profile(sender, instance, created, **kwargs):
     if created:
         TeacherProfile.objects.create(user=instance)
+
