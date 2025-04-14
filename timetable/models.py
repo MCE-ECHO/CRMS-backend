@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from classrooms.models import Classroom
+from classroom.models import Classroom
 
 class Timetable(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # Teacher

@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from classrooms.models import Classroom
+from classroom.models import Classroom
 
 class Booking(models.Model):
     STATUS_CHOICES = [

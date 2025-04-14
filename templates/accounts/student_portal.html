@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Student Portal{% endblock %}
+
+{% block content %}
+  <h2>Welcome Student</h2>
+
+  <h3>1. View Timetable</h3>
+  <form id="timetableForm">
+    <input type="text" name="classroom" placeholder="Enter Classroom (e.g., CSE101)" required>
+    <button type="submit">View</button>
+  </form>
+  <div id="timetableResults"></div>
+
+  <hr>
+
+  <h3>2. Check Empty Classrooms</h3>
+  <form id="availabilityForm">
+    <input type="date" name="date" required>
+    <input type="time" name="start_time" required>
+    <input type="time" name="end_time" required>
+    <input type="text" name="block" placeholder="Block (optional)">
+    <button type="submit">Check</button>
+  </form>
+  <div id="availabilityResults"></div>
+
+  <script>
+    document.getElementById('timetableForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const classroom = this.classroom.value;
+      fetch(`/accounts/student/timetable/?classroom=${classroom}`)
+        .then(res => res.json())
+        .then(data => {
+          const html = data.length
+            ? `<table><tr><th>Day</th><th>Start</th><th>End</th><th>Teacher</th></tr>` +
+              data.map(d => `<tr><td>${d.day}</td><td>${d.start_time}</td><td>${d.end_time}</td><td>${d.teacher}</td></tr>`).join('') +
+              `</table>`
+            : '<p>No timetable found.</p>';
+          document.getElementById('timetableResults').innerHTML = html;
+        });
+    });
+
+    document.getElementById('availabilityForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const params = new URLSearchParams(new FormData(this)).toString();
+      fetch(`/accounts/student/available-classrooms/?${params}`)
+        .then(res => res.json())
+        .then(data => {
+          const html = data.length
+            ? `<table><tr><th>Classroom</th><th>Block</th></tr>` +
+              data.map(d => `<tr><td>${d.name}</td><td>${d.block}</td></tr>`).join('') +
+              `</table>`
+            : '<p>No available classrooms.</p>';
+          document.getElementById('availabilityResults').innerHTML = html;
+        });
+    });
+  </script>
+{% endblock %}

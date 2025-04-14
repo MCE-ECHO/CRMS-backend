@@ -13,7 +13,7 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework import serializers, status
 from timetable.models import Timetable
-from classrooms.models import Classroom
+from classroom.models import Classroom
 from booking.models import Booking
 
 def is_admin(user):

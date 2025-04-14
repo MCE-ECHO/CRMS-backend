@@ -1,6 +1,6 @@
 from django.contrib import admin
 from timetable.models import Timetable
-from classrooms.models import Classroom
+from classroom.models import Classroom
 from booking.models import Booking
 
 class TimetableAdmin(admin.ModelAdmin):
@@ -67,6 +67,6 @@ class BookingAdmin(admin.ModelAdmin):
     def reject_selected(self, request, queryset):
         queryset.update(status='rejected')
 
-admin.site.register(Timetable, TimetableAdmin)
-admin.site.register(Classroom, ClassroomAdmin)
-admin.site.register(Booking, BookingAdmin)
+#admin.site.register(Timetable, TimetableAdmin)
+#admin.site.register(Classroom, ClassroomAdmin)
+#admin.site.register(Booking, BookingAdmin)
