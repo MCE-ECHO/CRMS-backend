@@ -43,9 +43,10 @@ class TimetableUploadView(APIView):
             for _, row in df.iterrows():
                 try:
                     classroom = Classroom.objects.get(name=row['classroom'])
-                    teacher = User.objects.get(username=row['teacher'])
+                    teacher = User.objects.get(username=row['teacher'])  # Corrected field name
                     start_time = datetime.strptime(row['start_time'], '%H:%M').time()
                     end_time = datetime.strptime(row['end_time'], '%H:%M').time()
+
                     Timetable.objects.create(
                         classroom=classroom,
                         teacher=teacher,
@@ -57,12 +58,11 @@ class TimetableUploadView(APIView):
                 except Classroom.DoesNotExist:
                     errors.append(f"Classroom '{row['classroom']}' not found")
                 except User.DoesNotExist:
-                    errors.append(f"Teacher '{row['teacher']}' not found")
-                except ValueError:
-                    errors.append(f"Invalid time format for classroom {row['classroom']}")
+                    errors.append(f"Teacher '{row['teacher']}' not found")  # Corrected field name
+                except ValueError as ve:
+                    errors.append(f"Invalid time format for classroom {row['classroom']}: {ve}")
                 except Exception as e:
                    errors.append(f"Error processing row: {e}")
-
 
             if errors:
                 return Response({
@@ -73,6 +73,12 @@ class TimetableUploadView(APIView):
             return Response({"message": f"{success_count} entries added successfully"},
                           status=status.HTTP_201_CREATED)
 
+        except FileNotFoundError:
+            return Response({"error": "File not found"}, status=status.HTTP_400_BAD_REQUEST)
+        except pd.errors.EmptyDataError:
+            return Response({"error": "Uploaded file is empty"}, status=status.HTTP_400_BAD_REQUEST)
+        except pd.errors.ParserError:
+            return Response({"error": "Error parsing the file. Make sure it's a valid CSV or Excel file."}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -223,10 +229,10 @@ def teacher_list(request):
 def export_timetable_csv(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="timetable_export.csv"'
-
+    
     writer = csv.writer(response)
     writer.writerow(['Day', 'Start Time', 'End Time', 'Classroom', 'Teacher'])
-
+    
     try:
         for row in Timetable.objects.select_related('classroom', 'teacher'):
             writer.writerow([
