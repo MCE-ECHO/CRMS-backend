@@ -43,18 +43,22 @@ class TimetableUploadView(APIView):
                 try:
                     classroom = Classroom.objects.get(name=row['classroom'])
                     teacher = User.objects.get(username=row['teacher_username'])
+                    start_time = datetime.strptime(row['start_time'], '%H:%M').time()
+                    end_time = datetime.strptime(row['end_time'], '%H:%M').time()
                     Timetable.objects.create(
                         classroom=classroom,
                         teacher=teacher,
                         day=row['day'],
-                        start_time=row['start_time'],
-                        end_time=row['end_time']
+                        start_time=start_time,
+                        end_time=end_time
                     )
                     success_count += 1
                 except Classroom.DoesNotExist:
                     errors.append(f"Classroom '{row['classroom']}' not found")
                 except User.DoesNotExist:
                     errors.append(f"Teacher '{row['teacher_username']}' not found")
+                except ValueError:
+                    errors.append(f"Invalid time format for classroom {row['classroom']}")
 
             if errors:
                 return Response({
@@ -71,14 +75,12 @@ class TimetableUploadView(APIView):
 class TimetableSerializer(serializers.ModelSerializer):
     classroom = serializers.PrimaryKeyRelatedField(queryset=Classroom.objects.all())
     teacher = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_staff=True))
+    start_time = serializers.TimeField(format='%H:%M')
+    end_time = serializers.TimeField(format='%H:%M')
 
     class Meta:
         model = Timetable
         fields = '__all__'
-        extra_kwargs = {
-            'start_time': {'format': '%H:%M'},
-            'end_time': {'format': '%H:%M'}
-        }
 
 @api_view(['GET'])
 def all_timetables(request):
@@ -233,3 +235,4 @@ def export_timetable_csv(request):
         return response
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

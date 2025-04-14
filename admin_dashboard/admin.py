@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from timetable.models import Timetable
 from classroom.models import Classroom
 from booking.models import Booking
@@ -46,6 +47,7 @@ class BookingAdmin(admin.ModelAdmin):
 
     def time_slot(self, obj):
         return f"{obj.start_time.strftime('%H:%M')} - {obj.end_time.strftime('%H:%M')}"
+    time_slot.short_description = 'Time Slot'
     
     def status_badge(self, obj):
         colors = {
@@ -58,6 +60,7 @@ class BookingAdmin(admin.ModelAdmin):
             colors[obj.status],
             obj.status.capitalize()
         )
+    status_badge.short_description = 'Status'
     
     @admin.action(description='Approve selected bookings')
     def approve_selected(self, request, queryset):
@@ -67,6 +70,7 @@ class BookingAdmin(admin.ModelAdmin):
     def reject_selected(self, request, queryset):
         queryset.update(status='rejected')
 
-#admin.site.register(Timetable, TimetableAdmin)
-#admin.site.register(Classroom, ClassroomAdmin)
-#admin.site.register(Booking, BookingAdmin)
+admin.site.register(Timetable, TimetableAdmin)
+admin.site.register(Classroom, ClassroomAdmin)
+admin.site.register(Booking, BookingAdmin)
+
