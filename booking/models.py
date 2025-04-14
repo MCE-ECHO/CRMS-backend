@@ -10,7 +10,7 @@ class Booking(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE)
+    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, related_name='bookings')
     date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
@@ -18,3 +18,4 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.classroom.name} booking by {self.user.username} on {self.date}"
+

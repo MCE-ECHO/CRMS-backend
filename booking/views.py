@@ -1,10 +1,14 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
 from .models import Booking
 from .serializers import BookingSerializer
-from rest_framework import status
+from django.shortcuts import get_object_or_404
 
 class BookingListCreateView(APIView):
+    """
+    List all bookings, or create a new booking.
+    """
     def get(self, request):
         bookings = Booking.objects.all()
         serializer = BookingSerializer(bookings, many=True)
@@ -18,11 +22,12 @@ class BookingListCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ApproveBookingView(APIView):
-    def post(self, request, booking_id):
-        try:
-            booking = Booking.objects.get(id=booking_id)
-            booking.status = 'approved'
-            booking.save()
-            return Response({'status': 'Booking approved'})
-        except Booking.DoesNotExist:
-            return Response({'error': 'Booking not found'}, status=404)
+    """
+    Approve a booking.
+    """
+    def post(self, request, pk):
+        booking = get_object_or_404(Booking, pk=pk)
+        booking.status = 'approved'
+        booking.save()
+        return Response({'status': 'Booking approved'})
+
