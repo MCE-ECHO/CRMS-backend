@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block title %}Student Portal{% endblock %}
 
 {% block content %}
@@ -30,12 +32,19 @@
       fetch(`/accounts/student/timetable/?classroom=${classroom}`)
         .then(res => res.json())
         .then(data => {
-          const html = data.length
-            ? `<table><tr><th>Day</th><th>Start</th><th>End</th><th>Teacher</th></tr>` +
-              data.map(d => `<tr><td>${d.day}</td><td>${d.start_time}</td><td>${d.end_time}</td><td>${d.teacher}</td></tr>`).join('') +
-              `</table>`
-            : '<p>No timetable found.</p>';
+          let html = '';
+          if (data.length) {
+            html = `<table><thead><tr><th>Day</th><th>Start</th><th>End</th><th>Teacher</th></tr></thead><tbody>`;
+            html += data.map(d => `<tr><td>${d.day}</td><td>${d.start_time}</td><td>${d.end_time}</td><td>${d.teacher}</td></tr>`).join('');
+            html += `</tbody></table>`;
+          } else {
+            html = '<p>No timetable found.</p>';
+          }
           document.getElementById('timetableResults').innerHTML = html;
+        })
+        .catch(error => {
+          console.error('Error fetching timetable:', error);
+          document.getElementById('timetableResults').innerHTML = '<p>Error fetching timetable.</p>';
         });
     });
 
@@ -45,13 +54,21 @@
       fetch(`/accounts/student/available-classrooms/?${params}`)
         .then(res => res.json())
         .then(data => {
-          const html = data.length
-            ? `<table><tr><th>Classroom</th><th>Block</th></tr>` +
-              data.map(d => `<tr><td>${d.name}</td><td>${d.block}</td></tr>`).join('') +
-              `</table>`
-            : '<p>No available classrooms.</p>';
+          let html = '';
+          if (data.length) {
+            html = `<table><thead><tr><th>Classroom</th><th>Block</th></tr></thead><tbody>`;
+            html += data.map(d => `<tr><td>${d.name}</td><td>${d.block}</td></tr>`).join('');
+            html += `</tbody></table>`;
+          } else {
+            html = '<p>No available classrooms.</p>';
+          }
           document.getElementById('availabilityResults').innerHTML = html;
+        })
+        .catch(error => {
+          console.error('Error fetching classrooms:', error);
+          document.getElementById('availabilityResults').innerHTML = '<p>Error fetching classrooms.</p>';
         });
     });
   </script>
 {% endblock %}
+
