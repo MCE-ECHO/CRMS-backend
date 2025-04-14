@@ -1,0 +1,200 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    padding: 2rem;
+    background-color: #FFFFFF; /* White (60%) */
+    line-height: 1.6;
+    color: #333;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #333;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+}
+
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Layout Styles */
+header, footer {
+    margin-bottom: 1.5rem;
+    text-align: center;
+    background-color: #FFD7BE; /* Light Peach (30%) */
+    padding: 1rem;
+    border-radius: 10px;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 1200px; /* Adjust as needed */
+    margin: 0 auto;
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    background-color: #FFFFFF;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 0.8rem;
+    text-align: center;
+}
+
+th {
+    background-color: #ADD8E6; /* Light Blue (10%) */
+    font-weight: bold;
+}
+
+/* Form Styles */
+.form-group {
+    margin: 1rem 0;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="time"],
+select {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    width: 200px; /* Adjust as needed */
+}
+
+button {
+    padding: 0.75rem 1.25rem;
+    margin: 0.2rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    font-size: 1rem;
+}
+
+button:hover {
+    opacity: 0.85;
+}
+
+/* Specific Element Styles */
+.login-container {
+    width: 300px;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: #f0f2f5;
+}
+
+.portal-links,
+.home-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.dashboard-sections {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
+.dashboard-sections section {
+    margin: 20px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: #f0f2f5;
+    width: calc(33.33% - 40px); /* Adjusted for margin */
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
+}
+
+.chart-container {
+    margin-bottom: 3rem;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 100%; /* Take full width within main */
+}
+
+/* Button Colors */
+.approve {
+    background: #4CAF50;
+    color: white;
+}
+
+.reject {
+    background: #f44336;
+    color: white;
+}
+
+.edit {
+    background: #ffc107;
+    color: black;
+}
+
+.delete {
+    background: #dc3545;
+    color: white;
+}
+
+.export {
+    background: #007bff;
+    color: white;
+    float: right;
+}
+
+/* Loading Animation */
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+}
+
+/* Media Queries for Responsiveness */
+@media only screen and (max-width: 768px) {
+    body {
+        padding: 1rem;
+    }
+
+    header,
+    footer {
+        padding: 0.5rem;
+    }
+
+    .dashboard-sections section {
+        width: 100%;
+        margin: 10px 0;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="time"],
+    select {
+        width: 100%; /* Full width on smaller screens */
+    }
+
+    .form-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
