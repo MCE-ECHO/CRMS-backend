@@ -2,12 +2,14 @@
 
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Admin Dashboard</title>
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+
 <body>
     <h1>College Classroom Management Dashboard</h1>
 
@@ -87,28 +89,84 @@
         </table>
     </div>
 
+    <!-- Upload Timetable Section -->
+    <div class="chart-container">
+        <h2>Upload Timetable</h2>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".csv, .xlsx" required>
+            <button type="submit">Upload</button>
+        </form>
+        <div id="uploadStatus"></div>
+    </div>
+
     <script>
         function getCSRFToken() {
-            return document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+            return document.cookie
+                .split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1];
         }
+
+        document.getElementById('uploadForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch('/admin-dashboard/upload-timetable/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('uploadStatus').innerText = data.message || 'Upload successful';
+                    // Reload timetable after successful upload
+                    loadTimetable();
+                })
+                .catch(error => {
+                    document.getElementById('uploadStatus').innerText = 'Upload failed';
+                });
+        });
 
         function initCharts() {
             fetch('/admin-dashboard/usage/').then(res => res.json()).then(data => {
                 new Chart(document.getElementById('usageChart'), {
                     type: 'bar',
-                    data: { labels: data.labels, datasets: [{ label: 'Bookings Count', data: data.data, backgroundColor: 'rgba(54, 162, 235, 0.6)' }] }
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Bookings Count',
+                            data: data.data,
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                        }]
+                    }
                 });
             });
             fetch('/admin-dashboard/peak-hours/').then(res => res.json()).then(data => {
                 new Chart(document.getElementById('peakHoursChart'), {
                     type: 'line',
-                    data: { labels: data.labels, datasets: [{ label: 'Bookings per Hour', data: data.data, borderColor: 'rgba(255, 99, 132, 1)', fill: false }] }
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Bookings per Hour',
+                            data: data.data,
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            fill: false
+                        }]
+                    }
                 });
             });
             fetch('/admin-dashboard/active-faculty/').then(res => res.json()).then(data => {
                 new Chart(document.getElementById('activeFacultyChart'), {
                     type: 'pie',
-                    data: { labels: data.labels, datasets: [{ data: data.data, backgroundColor: ['#4CAF50', '#2196F3', '#ff9800', '#e91e63'] }] }
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            data: data.data,
+                            backgroundColor: ['#4CAF50', '#2196F3', '#ff9800', '#e91e63']
+                        }]
+                    }
                 });
             });
         }
@@ -149,13 +207,19 @@
         }
 
         function handleBookingAction(id, action) {
-            Swal.fire({ title: `${action} this booking?`, icon: 'warning', showCancelButton: true })
+            Swal.fire({
+                    title: `${action} this booking?`,
+                    icon: 'warning',
+                    showCancelButton: true
+                })
                 .then(result => {
                     if (result.isConfirmed) {
                         fetch(`/admin-dashboard/${action}-booking/${id}/`, {
-                            method: 'POST',
-                            headers: { 'X-CSRFToken': getCSRFToken() }
-                        })
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRFToken': getCSRFToken()
+                                }
+                            })
                             .then(() => Swal.fire('Success', `Booking ${action}ed`, 'success'))
                             .then(loadPendingBookings);
                     }
@@ -179,36 +243,46 @@
                         <button class="delete" onclick="deleteTimetable(${item.id})">Delete</button>
                     </td>
                 </tr>`).join('');
-            document.getElementById('timetableTable').style.display = 'table';
-            document.getElementById('timetableLoading').style.display = 'none';
-        });
-    }
+                    document.getElementById('timetableTable').style.display = 'table';
+                    document.getElementById('timetableLoading').style.display = 'none';
+                });
+        }
 
-    function saveTimetable(id) {
-        const row = document.querySelector(`tr[data-id='${id}']`);
-        const inputs = row.querySelectorAll('input');
-        fetch(`/admin-dashboard/timetable/update/${id}/`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
-            body: JSON.stringify({
-                day: inputs[0].value,
-                start_time: inputs[1].value,
-                end_time: inputs[2].value,
-                classroom: inputs[3].value,
-                teacher: inputs[4].value
-            })
-        }).then(() => Swal.fire('Saved!', '', 'success')).then(loadTimetable);
-    }
+        function saveTimetable(id) {
+            const row = document.querySelector(`tr[data-id='${id}']`);
+            const inputs = row.querySelectorAll('input');
+            fetch(`/admin-dashboard/timetable/update/${id}/`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        day: inputs[0].value,
+                        start_time: inputs[1].value,
+                        end_time: inputs[2].value,
+                        classroom: inputs[3].value,
+                        teacher: inputs[4].value
+                    })
+                }).then(() => Swal.fire('Saved!', '', 'success')).then(loadTimetable);
+        }
 
-    function deleteTimetable(id) {
-        Swal.fire({ title: 'Delete entry?', showCancelButton: true, confirmButtonText: 'Delete' })
-            .then(result => {
-                if (result.isConfirmed) {
-                    fetch(`/admin-dashboard/timetable/delete/${id}/`, {
-                        method: 'DELETE', headers: { 'X-CSRFToken': getCSRFToken() }
-                    }).then(() => Swal.fire('Deleted!', '', 'success')).then(loadTimetable);
-                }
-            });
+        function deleteTimetable(id) {
+            Swal.fire({
+                    title: 'Delete entry?',
+                    showCancelButton: true,
+                    confirmButtonText: 'Delete'
+                })
+                .then(result => {
+                    if (result.isConfirmed) {
+                        fetch(`/admin-dashboard/timetable/delete/${id}/`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRFToken': getCSRFToken()
+                            }
+                        }).then(() => Swal.fire('Deleted!', '', 'success')).then(loadTimetable);
+                    }
+                });
         }
 
         function exportCSV() {
@@ -223,5 +297,6 @@
     </script>
 
 </body>
+
 </html>
 
