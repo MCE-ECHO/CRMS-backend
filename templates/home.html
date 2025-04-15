@@ -1,18 +1,15 @@
 {% extends "base.html" %}
-
 {% block title %}Welcome{% endblock %}
-
 {% block content %}
-    
-        Admin Login
-    
-
-    
-        Teacher Login
-    
-
-    
-        Students can access their timetable and empty classrooms.
-    
+    <div class="home-links">
+        <h1>Welcome to the Classroom System</h1>
+        <p>Manage classrooms, timetables, and bookings with ease.</p>
+        {% if not user.is_authenticated %}
+            <div class="form-group">
+                <a href="{% url 'login' %}" class="approve">Login as Admin</a>
+                <a href="{% url 'login' %}" class="edit">Login as Teacher</a>
+                <a href="{% url 'student-portal' %}" class="export">Student Portal</a>
+            </div>
+        {% endif %}
+    </div>
 {% endblock %}
-

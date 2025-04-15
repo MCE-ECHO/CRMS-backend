@@ -1,0 +1,19 @@
+{% load static %}
+<div class="portal-links">
+    <a href="{% url 'home' %}" class="text-2xl font-bold">Classroom System</a>
+    <div class="form-group">
+        {% if user.is_authenticated %}
+            {% if user.is_staff %}
+                <a href="{% url 'admin-dashboard' %}">Admin Dashboard</a>
+            {% elif user.teacherprofile %}
+                <a href="{% url 'teacher-dashboard' %}">Teacher Dashboard</a>
+            {% else %}
+                <a href="{% url 'student-portal' %}">Student Portal</a>
+            {% endif %}
+            <a href="{% url 'profile' %}">Profile</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        {% else %}
+            <a href="{% url 'login' %}">Login</a>
+        {% endif %}
+    </div>
+</div>
