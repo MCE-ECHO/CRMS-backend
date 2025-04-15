@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+    <h2>Your Profile</h2>
+    <div class="chart-container">
+        <form method="post" enctype="multipart/form-data" class="form-group">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Save Changes</button>
+        </form>
+        {% if profile.avatar %}
+            <img src="{{ profile.avatar.url }}" alt="Avatar" style="width: 100px; height: 100px; border-radius: 50%;">
+        {% endif %}
+    </div>
+{% endblock %}

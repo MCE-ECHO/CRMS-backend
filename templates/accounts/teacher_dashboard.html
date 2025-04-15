@@ -1,58 +1,73 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
-
 {% block title %}Teacher Dashboard{% endblock %}
-
 {% block content %}
-  <h2>Welcome, {{ request.user.get_full_name }}</h2>
-  {% if profile %}
-      <h3>Department: {{ profile.department }}</h3>
-  {% else %}
-      <h3>No profile information available.</h3>
-  {% endif %}
+    <h2>Welcome, {{ request.user.get_full_name }}</h2>
+    {% if profile %}
+        <div class="chart-container">
+            <h3>Profile</h3>
+            <p>Department: {{ profile.department }}</p>
+            <p>Phone: {{ profile.phone|default:"Not set" }}</p>
+            <p>Bio: {{ profile.bio|default:"Not set" }}</p>
+            {% if profile.avatar %}
+                <img src="{{ profile.avatar.url }}" alt="Avatar" style="width: 100px; height: 100px; border-radius: 50%;">
+            {% endif %}
+        </div>
+    {% else %}
+        <p style="color: #f44336;">No profile information available.</p>
+    {% endif %}
 
-  <h4>Your Timetable</h4>
-  <table>
-    <thead>
-      <tr>
-        <th>Day</th>
-        <th>Time</th>
-        <th>Classroom</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for t in timetable %}
-      <tr>
-        <td>{{ t.day }}</td>
-        <td>{{ t.start_time }} - {{ t.end_time }}</td>
-        <td>{{ t.classroom.name }}</td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="3">No classes assigned.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    <div class="chart-container">
+        <h3>Your Timetable</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Time</th>
+                    <th>Classroom</th>
+                    <th>Subject</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in timetable %}
+                    <tr>
+                        <td>{{ t.day }}</td>
+                        <td>{{ t.start_time }} - {{ t.end_time }}</td>
+                        <td>{{ t.classroom.name }}</td>
+                        <td>{{ t.subject_name|default:"N/A" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4">No classes assigned.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-  <h4>Upcoming Bookings</h4>
-  <table>
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Time</th>
-        <th>Classroom</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for b in bookings %}
-      <tr>
-        <td>{{ b.date }}</td>
-        <td>{{ b.start_time }} - {{ b.end_time }}</td>
-        <td>{{ b.classroom.name }}</td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="3">No upcoming bookings.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    <div class="chart-container">
+        <h3>Upcoming Bookings</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Classroom</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in bookings %}
+                    <tr>
+                        <td>{{ b.date }}</td>
+                        <td>{{ b.start_time }} - {{ b.end_time }}</td>
+                        <td>{{ b.classroom.name }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3">No upcoming bookings.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 {% endblock %}
-

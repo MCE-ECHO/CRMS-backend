@@ -1,128 +1,140 @@
 {% extends "base.html" %}
 {% load static %}
-
 {% block title %}Student Portal{% endblock %}
-
 {% block content %}
-  <h2>Welcome Student</h2>
+    <h2>Welcome, Student</h2>
 
-  <h3>1. View Timetable</h3>
-  <form id="timetableForm">
-    <input type="text" name="classroom" placeholder="Enter Classroom (e.g., CSE101)" required>
-    <button type="submit">View</button>
-  </form>
-  <div id="timetableResults"></div>
+    <div class="dashboard-sections">
+        <!-- Timetable Search -->
+        <section class="chart-container">
+            <h3>View Timetable</h3>
+            <form id="timetableForm" class="form-group">
+                <input type="text" name="classroom" placeholder="Enter Classroom (e.g., CSE101)" required>
+                <button type="submit">View</button>
+            </form>
+            <div id="timetableResults"></div>
+        </section>
 
-  <hr>
+        <!-- Availability Search -->
+        <section class="chart-container">
+            <h3>Check Empty Classrooms</h3>
+            <form id="availabilityForm" class="form-group">
+                <input type="date" name="date" required>
+                <input type="time" name="start_time" required>
+                <input type="time" name="end_time" required>
+                <input type="text" name="block" placeholder="Block (optional)">
+                <button type="submit">Check</button>
+            </form>
+            <div id="availabilityResults"></div>
+        </section>
+    </div>
 
-  <h3>2. Check Empty Classrooms</h3>
-  <form id="availabilityForm">
-    <input type="date" name="date" required>
-    <input type="time" name="start_time" required>
-    <input type="time" name="end_time" required>
-    <input type="text" name="block" placeholder="Block (optional)">
-    <button type="submit">Check</button>
-  </form>
-  <div id="availabilityResults"></div>
+    <!-- Create Booking -->
+    <div class="form-group">
+        <a href="{% url 'booking-create' %}" class="approve">Create New Booking</a>
+    </div>
 
-  <hr>
+    <!-- Timetable -->
+    <div class="chart-container">
+        <h2>Your Timetable</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Time</th>
+                    <th>Classroom</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in timetable %}
+                    <tr>
+                        <td>{{ t.day }}</td>
+                        <td>{{ t.start_time }} - {{ t.end_time }}</td>
+                        <td>{{ t.classroom.name }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3">No classes assigned.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-  <h2>Your Timetable</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Day</th>
-        <th>Time</th>
-        <th>Classroom</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for t in timetable %}
-        <tr>
-          <td>{{ t.day }}</td>
-          <td>{{ t.start_time }} - {{ t.end_time }}</td>
-          <td>{{ t.classroom.name }}</td>
-        </tr>
-      {% empty %}
-        <tr>
-          <td colspan="3">No classes assigned.</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    <!-- Bookings -->
+    <div class="chart-container">
+        <h2>Your Bookings</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Classroom</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in bookings %}
+                    <tr>
+                        <td>{{ b.date }}</td>
+                        <td>{{ b.start_time }} - {{ b.end_time }}</td>
+                        <td>{{ b.classroom.name }}</td>
+                        <td>{{ b.status|capfirst }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4">No upcoming bookings.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-  <h2>Available Classrooms</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Time</th>
-        <th>Classroom</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for b in bookings %}
-        <tr>
-          <td>{{ b.date }}</td>
-          <td>{{ b.start_time }} - {{ b.end_time }}</td>
-          <td>{{ b.classroom.name }}</td>
-        </tr>
-      {% empty %}
-        <tr>
-          <td colspan="3">No upcoming bookings.</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-
-  <script>
-    document.getElementById('timetableForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const classroom = this.classroom.value;
-      fetch(`/accounts/student/timetable/?classroom=${classroom}`)
-        .then(res => res.json())
-        .then(data => {
-          let html = '';
-          if (data.length) {
-            html = '<table><tr><th>Day</th><th>Start</th><th>End</th><th>Teacher</th></tr>';
-            data.forEach(d => {
-              html += `<tr><td>${d.day}</td><td>${d.start_time}</td><td>${d.end_time}</td><td>${d.teacher}</td></tr>`;
-            });
-            html += '</table>';
-          } else {
-            html = '<p>No timetable found.</p>';
-          }
-          document.getElementById('timetableResults').innerHTML = html;
-        })
-        .catch(error => {
-          console.error('Error fetching timetable:', error);
-          document.getElementById('timetableResults').innerHTML = '<p>Error fetching timetable.</p>';
+    <script>
+        document.getElementById('timetableForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const classroom = this.classroom.value;
+            fetch(`/accounts/student/timetable/?classroom=${classroom}`)
+                .then(res => res.json())
+                .then(data => {
+                    let html = '';
+                    if (data.length) {
+                        html = '<table><tr><th>Day</th><th>Start</th><th>End</th><th>Teacher</th></tr>';
+                        data.forEach(d => {
+                            html += `<tr><td>${d.day}</td><td>${d.start_time}</td><td>${d.end_time}</td><td>${d.teacher}</td></tr>`;
+                        });
+                        html += '</table>';
+                    } else {
+                        html = '<p style="color: #f44336;">No timetable found.</p>';
+                    }
+                    document.getElementById('timetableResults').innerHTML = html;
+                })
+                .catch(error => {
+                    document.getElementById('timetableResults').innerHTML = '<p style="color: #f44336;">Error fetching timetable.</p>';
+                });
         });
-    });
 
-    document.getElementById('availabilityForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const params = new URLSearchParams(new FormData(this)).toString();
-      fetch(`/accounts/student/available-classrooms/?${params}`)
-        .then(res => res.json())
-        .then(data => {
-          let html = '';
-          if (data.length) {
-            html = '<table><tr><th>Classroom</th><th>Block</th></tr>';
-            data.forEach(d => {
-              html += `<tr><td>${d.name}</td><td>${d.block}</td></tr>`;
-            });
-            html += '</table>';
-          } else {
-            html = '<p>No available classrooms.</p>';
-          }
-          document.getElementById('availabilityResults').innerHTML = html;
-        })
-        .catch(error => {
-          console.error('Error fetching availability:', error);
-          document.getElementById('availabilityResults').innerHTML = '<p>Error fetching availability.</p>';
+        document.getElementById('availabilityForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const params = new URLSearchParams(new FormData(this)).toString();
+            fetch(`/accounts/student/available-classrooms/?${params}`)
+                .then(res => res.json())
+                .then(data => {
+                    let html = '';
+                    if (data.length) {
+                        html = '<table><tr><th>Classroom</th><th>Block</th></tr>';
+                        data.forEach(d => {
+                            html += `<tr><td>${d.name}</td><td>${d.block}</td></tr>`;
+                        });
+                        html += '</table>';
+                    } else {
+                        html = '<p style="color: #f44336;">No available classrooms.</p>';
+                    }
+                    document.getElementById('availabilityResults').innerHTML = html;
+                })
+                .catch(error => {
+                    document.getElementById('availabilityResults').innerHTML = '<p style="color: #f44336;">Error fetching availability.</p>';
+                });
         });
-    });
-  </script>
+    </script>
 {% endblock %}
-
