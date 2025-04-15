@@ -1,13 +1,29 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
 {% block title %}Classrooms{% endblock %}
-
 {% block content %}
     <h1>Classrooms</h1>
-    <ul>
-        {% for classroom in classrooms %}
-            <li>{{ classroom.name }} - {{ classroom.block.name }} - Status: {{ classroom.status }}</li>
-        {% endfor %}
-    </ul>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Block</th>
+                <th>Status</th>
+                <th>Capacity</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for classroom in classrooms %}
+                <tr>
+                    <td>{{ classroom.name }}</td>
+                    <td>{{ classroom.block.name }}</td>
+                    <td>{{ classroom.status|capfirst }}</td>
+                    <td>{{ classroom.capacity }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4">No classrooms found.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 {% endblock %}
-
