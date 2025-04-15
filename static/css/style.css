@@ -1,6 +1,6 @@
 /* General Styles */
 body {
-    font-family: Arial, sans-serif;
+    font-family: Arial, sans-serif; /* Fallback from original */
     padding: 2rem;
     background-color: #FFFFFF; /* White (60%) */
     line-height: 1.6;
@@ -36,7 +36,7 @@ main {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    max-width: 1200px; /* Adjust as needed */
+    max-width: 1200px;
     margin: 0 auto;
 }
 
@@ -60,6 +60,10 @@ th {
     font-weight: bold;
 }
 
+tr:nth-child(even) {
+    background-color: #f2f2f2; /* For consistency with new style */
+}
+
 /* Form Styles */
 .form-group {
     margin: 1rem 0;
@@ -76,7 +80,7 @@ select {
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 1rem;
-    width: 200px; /* Adjust as needed */
+    width: 200px;
 }
 
 button {
@@ -85,7 +89,7 @@ button {
     border-radius: 4px;
     border: none;
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s, background-color 0.3s; /* From new style */
     font-size: 1rem;
 }
 
@@ -122,8 +126,8 @@ button:hover {
     border: 1px solid #ddd;
     border-radius: 10px;
     background-color: #f0f2f5;
-    width: calc(33.33% - 40px); /* Adjusted for margin */
-    box-sizing: border-box; /* Include padding and border in element's total width and height */
+    width: calc(33.33% - 40px);
+    box-sizing: border-box;
 }
 
 .chart-container {
@@ -132,7 +136,7 @@ button:hover {
     padding: 1.5rem;
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    width: 100%; /* Take full width within main */
+    width: 100%;
 }
 
 /* Button Colors */
@@ -169,6 +173,11 @@ button:hover {
     color: #666;
 }
 
+/* Tailwind Overrides and Additions */
+.border-red-500 {
+    border-color: #f44336 !important; /* Ensure compatibility with global.js */
+}
+
 /* Media Queries for Responsiveness */
 @media only screen and (max-width: 768px) {
     body {
@@ -189,7 +198,7 @@ button:hover {
     input[type="date"],
     input[type="time"],
     select {
-        width: 100%; /* Full width on smaller screens */
+        width: 100%;
     }
 
     .form-group {
@@ -197,4 +206,3 @@ button:hover {
         align-items: stretch;
     }
 }
-
