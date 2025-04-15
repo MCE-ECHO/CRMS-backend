@@ -1,32 +1,23 @@
+{% extends "base.html" %}
 {% load static %}
-
-<!DOCTYPE html>
-<html>
-
-<head>
-    <title>Admin Dashboard</title>
-    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-</head>
-
-<body>
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
     <h1>College Classroom Management Dashboard</h1>
 
     <!-- Statistics Charts -->
-    <div class="chart-container">
-        <h2>Classroom Usage Statistics</h2>
-        <canvas id="usageChart"></canvas>
-    </div>
-
-    <div class="chart-container">
-        <h2>Peak Usage Hours</h2>
-        <canvas id="peakHoursChart"></canvas>
-    </div>
-
-    <div class="chart-container">
-        <h2>Faculty Activity</h2>
-        <canvas id="activeFacultyChart"></canvas>
+    <div class="dashboard-sections">
+        <section class="chart-container">
+            <h2>Classroom Usage</h2>
+            <canvas id="usageChart"></canvas>
+        </section>
+        <section class="chart-container">
+            <h2>Peak Usage Hours</h2>
+            <canvas id="peakHoursChart"></canvas>
+        </section>
+        <section class="chart-container">
+            <h2>Faculty Activity</h2>
+            <canvas id="activeFacultyChart"></canvas>
+        </section>
     </div>
 
     <!-- Classroom Availability Search -->
@@ -89,44 +80,43 @@
         </table>
     </div>
 
-    <!-- Upload Timetable Section -->
+    <!-- Upload Timetable -->
     <div class="chart-container">
         <h2>Upload Timetable</h2>
-        <form id="uploadForm" enctype="multipart/form-data">
+        <form id="uploadForm" enctype="multipart/form-data" class="form-group">
             <input type="file" name="file" accept=".csv, .xlsx" required>
             <button type="submit">Upload</button>
         </form>
         <div id="uploadStatus"></div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         function getCSRFToken() {
-            return document.cookie
-                .split('; ')
-                .find(row => row.startsWith('csrftoken='))
-                ?.split('=')[1];
+            return document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
         }
 
-        document.getElementById('uploadForm').addEventListener('submit', function (e) {
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
-
             fetch('/admin-dashboard/upload-timetable/', {
                 method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCSRFToken()
-                },
+                headers: { 'X-CSRFToken': getCSRFToken() },
                 body: formData
             })
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('uploadStatus').innerText = data.message || 'Upload successful';
-                    // Reload timetable after successful upload
-                    loadTimetable();
-                })
-                .catch(error => {
-                    document.getElementById('uploadStatus').innerText = 'Upload failed';
-                });
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('uploadStatus').innerHTML = `<p>${data.message}</p>`;
+                if (data.errors) {
+                    data.errors.forEach(error => {
+                        document.getElementById('uploadStatus').innerHTML += `<p style="color: red;">${error}</p>`;
+                    });
+                }
+                loadTimetable();
+            })
+            .catch(error => {
+                document.getElementById('uploadStatus').innerHTML = '<p style="color: red;">Upload failed</p>';
+            });
         });
 
         function initCharts() {
@@ -135,11 +125,7 @@
                     type: 'bar',
                     data: {
                         labels: data.labels,
-                        datasets: [{
-                            label: 'Bookings Count',
-                            data: data.data,
-                            backgroundColor: 'rgba(54, 162, 235, 0.6)'
-                        }]
+                        datasets: [{ label: 'Bookings Count', data: data.data, backgroundColor: '#ADD8E6' }]
                     }
                 });
             });
@@ -148,12 +134,7 @@
                     type: 'line',
                     data: {
                         labels: data.labels,
-                        datasets: [{
-                            label: 'Bookings per Hour',
-                            data: data.data,
-                            borderColor: 'rgba(255, 99, 132, 1)',
-                            fill: false
-                        }]
+                        datasets: [{ label: 'Bookings per Hour', data: data.data, borderColor: '#007bff', fill: false }]
                     }
                 });
             });
@@ -162,16 +143,13 @@
                     type: 'pie',
                     data: {
                         labels: data.labels,
-                        datasets: [{
-                            data: data.data,
-                            backgroundColor: ['#4CAF50', '#2196F3', '#ff9800', '#e91e63']
-                        }]
+                        datasets: [{ data: data.data, backgroundColor: ['#4CAF50', '#007bff', '#ffc107', '#f44336'] }]
                     }
                 });
             });
         }
 
-        document.getElementById('availabilityForm').addEventListener('submit', function (e) {
+        document.getElementById('availabilityForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(e.target);
             const params = new URLSearchParams(formData).toString();
@@ -190,40 +168,36 @@
                 .then(res => res.json())
                 .then(data => {
                     const tbody = document.querySelector('#bookingTable tbody');
-                    tbody.innerHTML = '';
-                    data.forEach(b => {
-                        tbody.innerHTML += `<tr>
+                    tbody.innerHTML = data.map(b => `
+                        <tr>
                             <td>${b.user}</td>
                             <td>${b.classroom}</td>
                             <td>${b.date}</td>
                             <td>${b.start_time} - ${b.end_time}</td>
-                            <td>
+                            <td class="form-group">
                                 <button class="approve" onclick="handleBookingAction(${b.id}, 'approve')">Approve</button>
                                 <button class="reject" onclick="handleBookingAction(${b.id}, 'reject')">Reject</button>
                             </td>
-                        </tr>`;
-                    });
+                        </tr>
+                    `).join('');
                 });
         }
 
         function handleBookingAction(id, action) {
             Swal.fire({
-                    title: `${action} this booking?`,
-                    icon: 'warning',
-                    showCancelButton: true
-                })
-                .then(result => {
-                    if (result.isConfirmed) {
-                        fetch(`/admin-dashboard/${action}-booking/${id}/`, {
-                                method: 'POST',
-                                headers: {
-                                    'X-CSRFToken': getCSRFToken()
-                                }
-                            })
-                            .then(() => Swal.fire('Success', `Booking ${action}ed`, 'success'))
-                            .then(loadPendingBookings);
-                    }
-                });
+                title: `${action.charAt(0).toUpperCase() + action.slice(1)} this booking?`,
+                icon: 'warning',
+                showCancelButton: true
+            }).then(result => {
+                if (result.isConfirmed) {
+                    fetch(`/admin-dashboard/${action}-booking/${id}/`, {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': getCSRFToken() }
+                    })
+                    .then(() => Swal.fire('Success', `Booking ${action}ed`, 'success'))
+                    .then(loadPendingBookings);
+                }
+            });
         }
 
         function loadTimetable() {
@@ -232,17 +206,18 @@
                 .then(data => {
                     const tbody = document.querySelector('#timetableTable tbody');
                     tbody.innerHTML = data.map(item => `
-                <tr data-id="${item.id}">
-                    <td><input value="${item.day}"></td>
-                    <td><input type="time" value="${item.start_time}"></td>
-                    <td><input type="time" value="${item.end_time}"></td>
-                    <td><input value="${item.classroom}"></td>
-                    <td><input value="${item.teacher}"></td>
-                    <td>
-                        <button class="edit" onclick="saveTimetable(${item.id})">Save</button>
-                        <button class="delete" onclick="deleteTimetable(${item.id})">Delete</button>
-                    </td>
-                </tr>`).join('');
+                        <tr data-id="${item.id}">
+                            <td><input value="${item.day}"></td>
+                            <td><input type="time" value="${item.start_time}"></td>
+                            <td><input type="time" value="${item.end_time}"></td>
+                            <td><input value="${item.classroom}"></td>
+                            <td><input value="${item.teacher}"></td>
+                            <td class="form-group">
+                                <button class="edit" onclick="saveTimetable(${item.id})">Save</button>
+                                <button class="delete" onclick="deleteTimetable(${item.id})">Delete</button>
+                            </td>
+                        </tr>
+                    `).join('');
                     document.getElementById('timetableTable').style.display = 'table';
                     document.getElementById('timetableLoading').style.display = 'none';
                 });
@@ -252,37 +227,34 @@
             const row = document.querySelector(`tr[data-id='${id}']`);
             const inputs = row.querySelectorAll('input');
             fetch(`/admin-dashboard/timetable/update/${id}/`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCSRFToken()
-                    },
-                    body: JSON.stringify({
-                        day: inputs[0].value,
-                        start_time: inputs[1].value,
-                        end_time: inputs[2].value,
-                        classroom: inputs[3].value,
-                        teacher: inputs[4].value
-                    })
-                }).then(() => Swal.fire('Saved!', '', 'success')).then(loadTimetable);
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({
+                    day: inputs[0].value,
+                    start_time: inputs[1].value,
+                    end_time: inputs[2].value,
+                    classroom: inputs[3].value,
+                    teacher: inputs[4].value
+                })
+            }).then(() => Swal.fire('Saved!', '', 'success')).then(loadTimetable);
         }
 
         function deleteTimetable(id) {
             Swal.fire({
-                    title: 'Delete entry?',
-                    showCancelButton: true,
-                    confirmButtonText: 'Delete'
-                })
-                .then(result => {
-                    if (result.isConfirmed) {
-                        fetch(`/admin-dashboard/timetable/delete/${id}/`, {
-                            method: 'DELETE',
-                            headers: {
-                                'X-CSRFToken': getCSRFToken()
-                            }
-                        }).then(() => Swal.fire('Deleted!', '', 'success')).then(loadTimetable);
-                    }
-                });
+                title: 'Delete entry?',
+                showCancelButton: true,
+                confirmButtonText: 'Delete'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    fetch(`/admin-dashboard/timetable/delete/${id}/`, {
+                        method: 'DELETE',
+                        headers: { 'X-CSRFToken': getCSRFToken() }
+                    }).then(() => Swal.fire('Deleted!', '', 'success')).then(loadTimetable);
+                }
+            });
         }
 
         function exportCSV() {
@@ -295,8 +267,4 @@
             loadTimetable();
         });
     </script>
-
-</body>
-
-</html>
-
+{% endblock %}
