@@ -6,9 +6,9 @@ from booking.models import Booking
 
 @admin.register(Timetable)
 class TimetableAdmin(admin.ModelAdmin):
-    list_display = ('day', 'formatted_time', 'classroom', 'teacher')
+    list_display = ('day', 'formatted_time', 'classroom', 'teacher', 'subject_name')
     list_filter = ('day', 'classroom__block', 'teacher')
-    search_fields = ('day', 'classroom__name', 'teacher__username')
+    search_fields = ('day', 'classroom__name', 'teacher__username', 'subject_name')
     autocomplete_fields = ['classroom', 'teacher']
     ordering = ('day', 'start_time')
     list_per_page = 50
@@ -19,9 +19,9 @@ class TimetableAdmin(admin.ModelAdmin):
 
 @admin.register(Classroom)
 class ClassroomAdmin(admin.ModelAdmin):
-    list_display = ('name', 'block', 'capacity', 'status', 'status_badge')  # Added 'status' to list_display
+    list_display = ('name', 'block', 'capacity', 'status', 'status_badge')
     list_filter = ('block', 'status')
-    search_fields = ('name', 'block')
+    search_fields = ('name', 'block__name')
     list_editable = ('status',)
     list_per_page = 50
 
@@ -67,11 +67,10 @@ class BookingAdmin(admin.ModelAdmin):
         )
     status_badge.short_description = 'Status'
 
-    @admin.action(description='Approve selected bookings')
     def approve_selected(self, request, queryset):
         queryset.update(status='approved')
+    approve_selected.short_description = 'Approve selected bookings'
 
-    @admin.action(description='Reject selected bookings')
     def reject_selected(self, request, queryset):
         queryset.update(status='rejected')
-
+    reject_selected.short_description = 'Reject selected bookings'
