@@ -101,3 +101,8 @@ CORS_ALLOW_CREDENTIALS = True
 # Session settings
 SESSION_COOKIE_AGE = 1209600  # 2 weeks
 SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+
+# Note:
+# - Remember to set DEBUG = False and configure ALLOWED_HOSTS properly in production.
+# - SECRET_KEY should be kept secret and not hard-coded in production (use environment variables).
+
