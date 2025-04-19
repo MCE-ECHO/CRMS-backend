@@ -1,18 +1,64 @@
-# Django
+# Python bytecode and caches
 *.pyc
 __pycache__/
 *.pyo
 *.pyd
+
+# Python virtual environments
 .Python
 env/
 venv/
-*.sqlite3
-staticfiles/
+ENV/
+.venv/
 
-# IDE
+# Django stuff
+*.sqlite3
+db.sqlite3
+staticfiles/
+media/
+uploads/
+
+# Django migrations - ignore all except __init__.py
+**/migrations/
+!**/migrations/__init__.py
+
+# IDEs and editors
 .idea/
 .vscode/
+*.sublime-project
+*.sublime-workspace
 
-# Misc
+# Logs and databases
 *.log
+logs/
+
+# macOS files
 .DS_Store
+
+# Windows files
+Thumbs.db
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+
+# Test and cache files
+.pytest_cache/
+.mypy_cache/
+
+# Celery beat schedule file
+celerybeat-schedule
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Static files collected by collectstatic
+/static/
+
+# Ignore environment variable files
+.env
+.env.*
+
+# Ignore local settings if any
+local_settings.py
