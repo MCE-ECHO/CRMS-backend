@@ -36,3 +36,4 @@ urlpatterns = [
     path('classrooms/', classroom_list, name='classroom-list'),
     path('teachers/', teacher_list, name='teacher-list'),
 ]
+
