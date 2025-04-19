@@ -16,3 +16,4 @@ urlpatterns = [
     path('profile/', profile_view, name='profile'),
     path('booking/create/', booking_create_view, name='booking-create'),
 ]
+
