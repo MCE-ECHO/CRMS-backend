@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Welcome{% endblock %}
 {% block content %}
-    <div class="home-links">
-        <h1>Welcome to the Classroom System</h1>
-        <p>Manage classrooms, timetables, and bookings with ease.</p>
+    <div class="text-center">
+        <h1 class="text-3xl font-bold mb-4">Welcome to the Classroom System</h1>
+        <p class="text-lg mb-6">Manage classrooms, timetables, and bookings with ease.</p>
         {% if not user.is_authenticated %}
-            <div class="form-group">
+            <div class="flex justify-center gap-4">
                 <a href="{% url 'login' %}" class="approve">Login as Admin</a>
                 <a href="{% url 'login' %}" class="edit">Login as Teacher</a>
-                <a href="{% url 'student-portal' %}" class="export">Student Portal</a>
+                <a href="{% url 'login' %}" class="export">Login as Student</a>
             </div>
         {% endif %}
     </div>
