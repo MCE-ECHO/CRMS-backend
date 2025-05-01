@@ -1,19 +1,19 @@
 {% load static %}
-<div class="portal-links">
-    <a href="{% url 'home' %}" class="text-2xl font-bold">Classroom System</a>
-    <div class="form-group">
+<nav class="flex flex-col md:flex-row justify-between items-center">
+    <a href="{% url 'home' %}" class="text-2xl font-bold text-gray-800 mb-2 md:mb-0">Classroom System</a>
+    <div class="flex gap-4">
         {% if user.is_authenticated %}
-            {% if user.is_staff %}
-                <a href="{% url 'admin-dashboard' %}">Admin Dashboard</a>
-            {% elif user.teacherprofile %}
-                <a href="{% url 'teacher-dashboard' %}">Teacher Dashboard</a>
+            {% if user.is_superuser %}
+                <a href="{% url 'admin-dashboard' %}" class="text-blue-600 hover:underline">Admin Dashboard</a>
+            {% elif user.is_staff %}
+                <a href="{% url 'teacher-dashboard' %}" class="text-blue-600 hover:underline">Teacher Dashboard</a>
             {% else %}
-                <a href="{% url 'student-portal' %}">Student Portal</a>
+                <a href="{% url 'student-portal' %}" class="text-blue-600 hover:underline">Student Portal</a>
             {% endif %}
-            <a href="{% url 'profile' %}">Profile</a>
-            <a href="{% url 'logout' %}">Logout</a>
+            <a href="{% url 'profile' %}" class="text-blue-600 hover:underline">Profile</a>
+            <a href="{% url 'logout' %}" class="text-blue-600 hover:underline">Logout</a>
         {% else %}
-            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'login' %}" class="text-blue-600 hover:underline">Login</a>
         {% endif %}
     </div>
-</div>
+</nav>
