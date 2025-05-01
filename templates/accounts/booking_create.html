@@ -2,31 +2,31 @@
 {% load static %}
 {% block title %}Create Booking{% endblock %}
 {% block content %}
-    <h2>Create a New Booking</h2>
+    <h2 class="text-2xl font-bold mb-6 text-center">Create a New Booking</h2>
     <div class="chart-container">
-        <form method="post" class="form-group">
+        <form method="post" class="space-y-4">
             {% csrf_token %}
             <div>
-                <label for="classroom">Classroom</label>
-                <select name="classroom" required>
+                <label for="classroom" class="block text-sm font-medium">Classroom</label>
+                <select name="classroom" required class="w-full p-2 border rounded">
                     {% for c in classrooms %}
                         <option value="{{ c.id }}">{{ c.name }} ({{ c.block.name }})</option>
                     {% endfor %}
                 </select>
             </div>
             <div>
-                <label for="date">Date</label>
-                <input type="date" name="date" required>
+                <label for="date" class="block text-sm font-medium">Date</label>
+                <input type="date" name="date" required class="w-full p-2 border rounded">
             </div>
             <div>
-                <label for="start_time">Start Time</label>
-                <input type="time" name="start_time" required>
+                <label for="start_time" class="block text-sm font-medium">Start Time</label>
+                <input type="time" name="start_time" required class="w-full p-2 border rounded">
             </div>
             <div>
-                <label for="end_time">End Time</label>
-                <input type="time" name="end_time" required>
+                <label for="end_time" class="block text-sm font-medium">End Time</label>
+                <input type="time" name="end_time" required class="w-full p-2 border rounded">
             </div>
-            <button type="submit">Submit Booking</button>
+            <button type="submit" class="approve w-full">Submit Booking</button>
         </form>
     </div>
 {% endblock %}
