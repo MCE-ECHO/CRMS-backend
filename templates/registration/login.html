@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 {% block title %}Login{% endblock %}
 {% block content %}
-    <div class="login-container">
-        <h2>Login</h2>
-        <form method="post">
+    <div class="max-w-md mx-auto bg-gray-100 p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
+        <form method="post" class="space-y-4">
             {% csrf_token %}
-            <div class="form-group">
+            <div class="space-y-2">
                 {{ form.as_p }}
-                <button type="submit">Login</button>
+                <button type="submit" class="approve w-full">Login</button>
             </div>
         </form>
         {% if form.errors %}
-            <p style="color: #f44336;">Invalid username or password.</p>
+            <p class="text-red-500 mt-4 text-center">Invalid username or password.</p>
         {% endif %}
     </div>
 {% endblock %}
