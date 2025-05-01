@@ -29,13 +29,10 @@ class StudentProfileForm(forms.ModelForm):
         }
 
 def home_redirect_view(request):
-    """
-    Redirect users to appropriate dashboard or portal based on their role.
-    """
     if request.user.is_authenticated:
-        if is_admin(request.user):
+        if request.user.is_superuser:
             return redirect('admin-dashboard')
-        elif is_teacher(request.user):
+        elif request.user.is_staff:
             return redirect('teacher-dashboard')
         else:
             return redirect('student-portal')
@@ -44,9 +41,6 @@ def home_redirect_view(request):
 @login_required
 @user_passes_test(is_teacher)
 def teacher_dashboard(request):
-    """
-    Display teacher dashboard with profile info, timetable, and bookings.
-    """
     profile = request.user.teacherprofile
     timetable = Timetable.objects.filter(teacher=request.user).select_related('classroom')
     upcoming_bookings = Booking.objects.filter(
@@ -60,9 +54,6 @@ def teacher_dashboard(request):
 
 @require_GET
 def student_timetable_view(request):
-    """
-    Return timetable entries for a given classroom as JSON.
-    """
     class_name = request.GET.get('classroom')
     if not class_name:
         return JsonResponse({'error': 'Missing classroom parameter'}, status=400)
@@ -74,14 +65,10 @@ def student_timetable_view(request):
         'end_time': e.end_time.strftime('%H:%M'),
         'teacher': e.teacher.username if e.teacher else 'N/A',
     } for e in entries]
-
     return JsonResponse(data, safe=False)
 
 @require_GET
 def student_available_classrooms(request):
-    """
-    Return available classrooms for a given date, time range, and optional block filter.
-    """
     date = request.GET.get('date')
     start = request.GET.get('start_time')
     end = request.GET.get('end_time')
@@ -105,7 +92,6 @@ def student_available_classrooms(request):
     ).values_list('classroom_id', flat=True)
 
     available_rooms = Classroom.objects.exclude(id__in=booked_ids).select_related('block')
-
     if block:
         available_rooms = available_rooms.filter(block__name__icontains=block)
 
@@ -114,9 +100,6 @@ def student_available_classrooms(request):
 
 @login_required
 def student_portal(request):
-    """
-    Display student portal with their timetable and bookings.
-    """
     timetable = Timetable.objects.filter(classroom__bookings__user=request.user).distinct()
     bookings = Booking.objects.filter(user=request.user).select_related('classroom')
     return render(request, 'accounts/student_portal.html', {
@@ -126,9 +109,6 @@ def student_portal(request):
 
 @login_required
 def profile_view(request):
-    """
-    Allow users to view and update their profile.
-    """
     if is_teacher(request.user):
         profile = request.user.teacherprofile
         form_class = ProfileForm
@@ -149,9 +129,6 @@ def profile_view(request):
 
 @login_required
 def booking_create_view(request):
-    """
-    Handle booking creation requests.
-    """
     if request.method == 'POST':
         classroom_id = request.POST.get('classroom')
         date = request.POST.get('date')
@@ -164,7 +141,6 @@ def booking_create_view(request):
             start_time_obj = datetime.strptime(start_time, '%H:%M').time()
             end_time_obj = datetime.strptime(end_time, '%H:%M').time()
 
-            # Check for booking conflicts
             conflicts = Booking.objects.filter(
                 classroom=classroom,
                 date=date_obj,
@@ -196,4 +172,3 @@ def booking_create_view(request):
 
     classrooms = Classroom.objects.all()
     return render(request, 'accounts/booking_create.html', {'classrooms': classrooms})
-
