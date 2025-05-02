@@ -1,14 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Welcome{% endblock %}
 {% block content %}
-    <div class="text-center">
+    <div class="text-center card">
         <h1 class="text-3xl font-bold mb-4">Welcome to the Classroom System</h1>
-        <p class="text-lg mb-6">Manage classrooms, timetables, and bookings with ease.</p>
+        <p class="text-lg mb-6 text-gray-600">Manage classrooms, timetables, and more with ease.</p>
         {% if not user.is_authenticated %}
             <div class="flex justify-center gap-4">
-                <a href="{% url 'login' %}" class="approve">Login as Admin</a>
-                <a href="{% url 'login' %}" class="edit">Login as Teacher</a>
-                <a href="{% url 'login' %}" class="export">Login as Student</a>
+                <a href="{% url 'login' %}" class="approve">Login</a>
             </div>
         {% endif %}
     </div>
