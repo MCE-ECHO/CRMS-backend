@@ -1,100 +1,85 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}Admin Dashboard{% endblock %}
-{% block content %}
-    <h1 class="text-3xl font-bold mb-6 text-center">College Classroom Management Dashboard</h1>
-
-    <!-- Statistics Charts -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <section class="chart-container">
-            <h2 class="text-xl font-semibold mb-4">Classroom Usage</h2>
-            <canvas id="usageChart"></canvas>
-        </section>
-        <section class="chart-container">
-            <h2 class="text-xl font-semibold mb-4">Peak Usage Hours</h2>
-            <canvas id="peakHoursChart"></canvas>
-        </section>
-        <section class="chart-container">
-            <h2 class="text-xl font-semibold mb-4">Faculty Activity</h2>
-            <canvas id="activeFacultyChart"></canvas>
-        </section>
-    </div>
-
-    <!-- Classroom Availability Search -->
-    <div class="chart-container">
-        <h2 class="text-xl font-semibold mb-4">Find Available Classrooms</h2>
-        <form id="availabilityForm" class="form-group space-y-2">
-            <input type="date" name="date" required class="w-full p-2 border rounded">
-            <input type="time" name="start_time" required class="w-full p-2 border rounded">
-            <input type="time" name="end_time" required class="w-full p-2 border rounded">
-            <input type="text" name="block" placeholder="Block Filter" class="w-full p-2 border rounded">
-            <button type="submit" class="approve w-full">Search</button>
-        </form>
-        <div class="overflow-x-auto mt-4">
-            <table id="availabilityTable" class="w-full" style="display:none;">
-                <thead>
-                    <tr>
-                        <th>Classroom Name</th>
-                        <th>Block</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Pending Bookings -->
-    <div class="chart-container">
-        <h2 class="text-xl font-semibold mb-4">Pending Booking Requests</h2>
-        <div class="overflow-x-auto">
-            <table id="bookingTable" class="w-full">
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Classroom</th>
-                        <th>Date</th>
-                        <th>Time Slot</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Timetable Management -->
-    <div class="chart-container">
-        <h2 class="text-xl font-semibold mb-4 flex justify-between items-center">
-            Timetable Management
-            <button class="export" onclick="exportCSV()">Export to CSV</button>
-        </h2>
-        <div class="loading" id="timetableLoading">Loading timetable data...</div>
-        <div class="overflow-x-auto">
-            <table id="timetableTable" class="w-full" style="display:none;">
-                <thead>
-                    <tr>
-                        <th>Day</th>
-                        <th>Start Time</th>
-                        <th>End Time</th>
-                        <th>Classroom</th>
-                        <th>Teacher</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Upload Timetable -->
-    <div class="chart-container">
-        <h2 class="text-xl font-semibold mb-4">Upload Timetable</h2>
-        <form id="uploadForm" enctype="multipart/form-data" class="form-group space-y-2">
-            <input type="file" name="file" accept=".csv, .xlsx" required class="w-full p-2 border rounded">
-            <button type="submit" class="approve w-full">Upload</button>
-        </form>
-        <div id="uploadStatus" class="mt-4"></div>
-    </div>
-
+{% block extra_scripts %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}
+{% block content %}
+    <div class="card">
+        <h1 class="text-3xl font-bold mb-6 text-center">College Classroom Management Dashboard</h1>
+
+        <!-- Statistics Charts -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <section class="card">
+                <h2 class="text-xl font-semibold mb-4">Classroom Usage</h2>
+                <canvas id="usageChart"></canvas>
+            </section>
+            <section class="card">
+                <h2 class="text-xl font-semibold mb-4">Peak Usage Hours</h2>
+                <canvas id="peakHoursChart"></canvas>
+            </section>
+            <section class="card">
+                <h2 class="text-xl font-semibold mb-4">Faculty Activity</h2>
+                <canvas id="activeFacultyChart"></canvas>
+            </section>
+        </div>
+
+        <!-- Classroom Availability Search -->
+        <div class="card">
+            <h2 class="text-xl font-semibold mb-4">Find Available Classrooms</h2>
+            <form id="availabilityForm" class="form-group space-y-2">
+                <input type="date" name="date" required class="w-full p-2 border rounded">
+                <input type="time" name="start_time" required class="w-full p-2 border rounded">
+                <input type="time" name="end_time" required class="w-full p-2 border rounded">
+                <input type="text" name="block" placeholder="Block Filter" class="w-full p-2 border rounded">
+                <button type="submit" class="approve w-full">Search</button>
+            </form>
+            <div class="overflow-x-auto mt-4">
+                <table id="availabilityTable" class="w-full" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>Classroom Name</th>
+                            <th>Block</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Timetable Management -->
+        <div class="card">
+            <h2 class="text-xl font-semibold mb-4 flex justify-between items-center">
+                Timetable Management
+                <button class="export" onclick="exportCSV()">Export to CSV</button>
+            </h2>
+            <div class="loading" id="timetableLoading">Loading timetable data...</div>
+            <div class="overflow-x-auto">
+                <table id="timetableTable" class="w-full" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Classroom</th>
+                            <th>Teacher</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Upload Timetable -->
+        <div class="card">
+            <h2 class="text-xl font-semibold mb-4">Upload Timetable</h2>
+            <form id="uploadForm" enctype="multipart/form-data" class="form-group space-y-2">
+                <input type="file" name="file" accept=".csv, .xlsx" required class="w-full p-2 border rounded">
+                <button type="submit" class="approve w-full">Upload</button>
+            </form>
+            <div id="uploadStatus" class="mt-4"></div>
+        </div>
+    </div>
 {% endblock %}
