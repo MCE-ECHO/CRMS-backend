@@ -2,76 +2,58 @@
 {% load static %}
 {% block title %}Teacher Dashboard{% endblock %}
 {% block content %}
-    <h2 class="text-2xl font-bold mb-6 text-center">Welcome, {{ request.user.get_full_name }}</h2>
-    {% if profile %}
-        <div class="chart-container">
-            <h3 class="text-xl font-semibold mb-4">Profile</h3>
-            <p><strong>Department:</strong> {{ profile.department }}</p>
-            <p><strong>Phone:</strong> {{ profile.phone|default:"Not set" }}</p>
-            <p><strong>Bio:</strong> {{ profile.bio|default:"Not set" }}</p>
-            {% if profile.avatar %}
-                <img src="{{ profile.avatar.url }}" alt="Avatar" class="mt-4 w-24 h-24 rounded-full mx-auto">
-            {% endif %}
-        </div>
-    {% else %}
-        <p class="text-red-500 text-center">No profile information available.</p>
-    {% endif %}
+    <div class="card">
+        <h2 class="text-2xl font-bold mb-6 text-center">Welcome, {{ request.user.get_full_name|default:request.user.username }}</h2>
+        {% if profile %}
+            <div class="card mb-6">
+                <h3 class="text-xl font-semibold mb-4">Profile</h3>
+                <div class="flex items-center space-x-4">
+                    {% if profile.avatar %}
+                        <img src="{{ profile.avatar.url }}" alt="Avatar" class="w-16 h-16 rounded-full shadow-md">
+                    {% else %}
+                        <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center shadow-md">
+                            <span class="text-gray-500 text-xl">{{ request.user.username|first }}</span>
+                        </div>
+                    {% endif %}
+                    <div>
+                        <p><strong>Department:</strong> {{ profile.department|default:"Not set" }}</p>
+                        <p><strong>Phone:</strong> {{ profile.phone|default:"Not set" }}</p>
+                        <p><strong>Bio:</strong> {{ profile.bio|default:"Not set" }}</p>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <p class="text-red-500 text-center">No profile information available.</p>
+        {% endif %}
 
-    <div class="chart-container">
-        <h3 class="text-xl font-semibold mb-4">Your Timetable</h3>
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead>
-                    <tr>
-                        <th>Day</th>
-                        <th>Time</th>
-                        <th>Classroom</th>
-                        <th>Subject</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for t in timetable %}
+        <div class="card">
+            <h3 class="text-xl font-semibold mb-4">Your Timetable</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
                         <tr>
-                            <td>{{ t.day }}</td>
-                            <td>{{ t.start_time }} - {{ t.end_time }}</td>
-                            <td>{{ t.classroom.name }}</td>
-                            <td>{{ t.subject_name|default:"N/A" }}</td>
+                            <th>Day</th>
+                            <th>Time</th>
+                            <th>Classroom</th>
+                            <th>Subject</th>
                         </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="4">No classes assigned.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="chart-container">
-        <h3 class="text-xl font-semibold mb-4">Upcoming Bookings</h3>
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Classroom</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for b in bookings %}
-                        <tr>
-                            <td>{{ b.date }}</td>
-                            <td>{{ b.start_time }} - {{ b.end_time }}</td>
-                            <td>{{ b.classroom.name }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="3">No upcoming bookings.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {% for t in timetable %}
+                            <tr>
+                                <td>{{ t.day }}</td>
+                                <td>{{ t.start_time }} - {{ t.end_time }}</td>
+                                <td>{{ t.classroom.name }}</td>
+                                <td>{{ t.subject_name|default:"N/A" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No classes assigned.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 {% endblock %}
