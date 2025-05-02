@@ -3,7 +3,7 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-a-d0ijp6v4p&2^m=7y0i22w$s$v=^4#a*l$_57h5ppk!-b7=-4'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-a-d0ijp6v4p&2^m=7y0i22w$s$v=^4#a*l$_57h5ppk!-b7=-4')
 DEBUG = True
 ALLOWED_HOSTS = ['*']
 
@@ -97,3 +97,6 @@ CORS_ALLOW_CREDENTIALS = True
 
 SESSION_COOKIE_AGE = 1209600  # 2 weeks
 SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+
+LOGIN_URL = '/login/'
+LOGOUT_REDIRECT_URL = '/'
