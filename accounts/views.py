@@ -5,19 +5,19 @@ from django.views.decorators.http import require_GET
 from django.utils import timezone
 from datetime import datetime
 from timetable.models import Timetable
-from booking.models import Booking
 from classroom.models import Classroom
 from .utils import is_teacher, is_admin
 from .models import TeacherProfile, StudentProfile
 from django.contrib import messages
 from django import forms
+from django.http import HttpResponseForbidden
 
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = TeacherProfile
         fields = ['department', 'avatar', 'phone', 'bio']
         widgets = {
-            'bio': forms.Textarea(attrs={'rows': 4}),
+            'bio': forms.Textarea(attrs={'rows': 4, 'class': 'w-full p-2 border rounded'}),
         }
 
 class StudentProfileForm(forms.ModelForm):
@@ -25,14 +25,14 @@ class StudentProfileForm(forms.ModelForm):
         model = StudentProfile
         fields = ['roll_number', 'avatar', 'phone', 'bio']
         widgets = {
-            'bio': forms.Textarea(attrs={'rows': 4}),
+            'bio': forms.Textarea(attrs={'rows': 4, 'class': 'w-full p-2 border rounded'}),
         }
 
 def home_redirect_view(request):
     if request.user.is_authenticated:
-        if request.user.is_superuser:
+        if is_admin(request.user):
             return redirect('admin-dashboard')
-        elif request.user.is_staff:
+        elif is_teacher(request.user):
             return redirect('teacher-dashboard')
         else:
             return redirect('student-portal')
@@ -43,13 +43,9 @@ def home_redirect_view(request):
 def teacher_dashboard(request):
     profile = request.user.teacherprofile
     timetable = Timetable.objects.filter(teacher=request.user).select_related('classroom')
-    upcoming_bookings = Booking.objects.filter(
-        user=request.user, status='approved'
-    ).order_by('date', 'start_time').select_related('classroom')
     return render(request, 'accounts/teacher_dashboard.html', {
         'profile': profile,
         'timetable': timetable,
-        'bookings': upcoming_bookings,
     })
 
 @require_GET
@@ -84,11 +80,10 @@ def student_available_classrooms(request):
     if search_date < timezone.now().date():
         return JsonResponse({'error': 'Date cannot be in the past'}, status=400)
 
-    booked_ids = Booking.objects.filter(
-        date=search_date,
+    booked_ids = Timetable.objects.filter(
+        day=search_date.strftime('%A'),
         start_time__lt=end_time,
-        end_time__gt=start_time,
-        status='approved'
+        end_time__gt=start_time
     ).values_list('classroom_id', flat=True)
 
     available_rooms = Classroom.objects.exclude(id__in=booked_ids).select_related('block')
@@ -100,11 +95,11 @@ def student_available_classrooms(request):
 
 @login_required
 def student_portal(request):
-    timetable = Timetable.objects.filter(classroom__bookings__user=request.user).distinct()
-    bookings = Booking.objects.filter(user=request.user).select_related('classroom')
+    if is_teacher(request.user) or is_admin(request.user):
+        return render(request, 'errors/403.html', {'message': 'Access denied: You are not a student.'}, status=403)
+    timetable = Timetable.objects.filter(classroom__timetable__teacher__studentprofile__user=request.user).distinct()
     return render(request, 'accounts/student_portal.html', {
         'timetable': timetable,
-        'bookings': bookings,
     })
 
 @login_required
@@ -126,49 +121,3 @@ def profile_view(request):
         form = form_class(instance=profile)
 
     return render(request, 'accounts/profile.html', {'form': form, 'profile': profile})
-
-@login_required
-def booking_create_view(request):
-    if request.method == 'POST':
-        classroom_id = request.POST.get('classroom')
-        date = request.POST.get('date')
-        start_time = request.POST.get('start_time')
-        end_time = request.POST.get('end_time')
-
-        try:
-            classroom = Classroom.objects.get(id=classroom_id)
-            date_obj = datetime.strptime(date, '%Y-%m-%d').date()
-            start_time_obj = datetime.strptime(start_time, '%H:%M').time()
-            end_time_obj = datetime.strptime(end_time, '%H:%M').time()
-
-            conflicts = Booking.objects.filter(
-                classroom=classroom,
-                date=date_obj,
-                start_time__lt=end_time_obj,
-                end_time__gt=start_time_obj,
-                status='approved'
-            )
-
-            if conflicts.exists():
-                messages.error(request, 'This time slot is already booked.')
-            else:
-                Booking.objects.create(
-                    user=request.user,
-                    classroom=classroom,
-                    date=date_obj,
-                    start_time=start_time_obj,
-                    end_time=end_time_obj,
-                    status='pending'
-                )
-                messages.success(request, 'Booking request submitted.')
-                return redirect('student-portal')
-
-        except Classroom.DoesNotExist:
-            messages.error(request, 'Selected classroom does not exist.')
-        except ValueError:
-            messages.error(request, 'Invalid date or time format.')
-        except Exception as e:
-            messages.error(request, f'Error creating booking: {str(e)}')
-
-    classrooms = Classroom.objects.all()
-    return render(request, 'accounts/booking_create.html', {'classrooms': classrooms})
