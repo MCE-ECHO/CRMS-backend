@@ -1,96 +1,67 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}Student Portal{% endblock %}
+{% block extra_scripts %}
+    <script src="{% static 'js/timetable.js' %}"></script>
+{% endblock %}
 {% block content %}
-    <h2 class="text-2xl font-bold mb-6 text-center">Welcome, Student</h2>
+    <div class="card">
+        <h2 class="text-2xl font-bold mb-6 text-center">Welcome, Student</h2>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <!-- Timetable Search -->
-        <section class="chart-container">
-            <h3 class="text-xl font-semibold mb-4">View Timetable</h3>
-            <form id="timetableForm" class="form-group space-y-2">
-                <input type="text" name="classroom" placeholder="Enter Classroom (e.g., CSE101)" required class="w-full p-2 border rounded">
-                <button type="submit" class="approve w-full">View</button>
-            </form>
-            <div id="timetableResults" class="mt-4"></div>
-        </section>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <!-- Timetable Search -->
+            <section class="card">
+                <h3 class="text-xl font-semibold mb-4">View Timetable</h3>
+                <form id="timetableForm" class="form-group space-y-2">
+                    <input type="text" name="classroom" placeholder="Enter Classroom (e.g., CSE101)" required class="w-full p-2 border rounded">
+                    <button type="submit" class="approve w-full">View</button>
+                </form>
+                <div id="timetableResults" class="mt-4"></div>
+            </section>
 
-        <!-- Availability Search -->
-        <section class="chart-container">
-            <h3 class="text-xl font-semibold mb-4">Check Empty Classrooms</h3>
-            <form id="availabilityForm" class="form-group space-y-2">
-                <input type="date" name="date" required class="w-full p-2 border rounded">
-                <input type="time" name="start_time" required class="w-full p-2 border rounded">
-                <input type="time" name="end_time" required class="w-full p-2 border rounded">
-                <input type="text" name="block" placeholder="Block (optional)" class="w-full p-2 border rounded">
-                <button type="submit" class="approve w-full">Check</button>
-            </form>
-            <div id="availabilityResults" class="mt-4"></div>
-        </section>
-    </div>
-
-    <!-- Create Booking -->
-    <div class="text-center mb-6">
-        <a href="{% url 'booking-create' %}" class="approve inline-block">Create New Booking</a>
-    </div>
-
-    <!-- Timetable -->
-    <div class="chart-container">
-        <h2 class="text-xl font-semibold mb-4">Your Timetable</h2>
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead>
-                    <tr>
-                        <th>Day</th>
-                        <th>Time</th>
-                        <th>Classroom</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for t in timetable %}
-                        <tr>
-                            <td>{{ t.day }}</td>
-                            <td>{{ t.start_time }} - {{ t.end_time }}</td>
-                            <td>{{ t.classroom.name }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="3">No classes assigned.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <!-- Availability Search -->
+            <section class="card">
+                <h3 class="text-xl font-semibold mb-4">Check Empty Classrooms</h3>
+                <form id="availabilityForm" class="form-group space-y-2">
+                    <input type="date" name="date" required class="w-full p-2 border rounded">
+                    <input type="time" name="start_time" required class="w-full p-2 border rounded">
+                    <input type="time" name="end_time" required class="w-full p-2 border rounded">
+                    <input type="text" name="block" placeholder="Block (optional)" class="w-full p-2 border rounded">
+                    <button type="submit" class="approve w-full">Check</button>
+                </form>
+                <div id="availabilityResults" class="mt-4"></div>
+            </section>
         </div>
-    </div>
 
-    <!-- Bookings -->
-    <div class="chart-container">
-        <h2 class="text-xl font-semibold mb-4">Your Bookings</h2>
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Classroom</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for b in bookings %}
+        <!-- Timetable -->
+        <div class="card">
+            <h2 class="text-xl font-semibold mb-4">Your Timetable</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
                         <tr>
-                            <td>{{ b.date }}</td>
-                            <td>{{ b.start_time }} - {{ b.end_time }}</td>
-                            <td>{{ b.classroom.name }}</td>
-                            <td>{{ b.status|capfirst }}</td>
+                            <th>Day</th>
+                            <th>Time</th>
+                            <th>Classroom</th>
+                            <th>Subject</th>
                         </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="4">No upcoming bookings.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {% for t in timetable %}
+                            <tr>
+                                <td>{{ t.day }}</td>
+                                <td>{{ t.start_time }} - {{ t.end_time }}</td>
+                                <td>{{ t.classroom.name }}</td>
+                                <td>{{ t.subject_name|default:"N/A" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No classes assigned.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 {% endblock %}
