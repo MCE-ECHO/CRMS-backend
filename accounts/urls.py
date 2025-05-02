@@ -5,7 +5,6 @@ from .views import (
     student_available_classrooms,
     student_portal,
     profile_view,
-    booking_create_view,
 )
 
 urlpatterns = [
@@ -14,6 +13,4 @@ urlpatterns = [
     path('student/available-classrooms/', student_available_classrooms, name='student-available-classrooms'),
     path('student/portal/', student_portal, name='student-portal'),
     path('profile/', profile_view, name='profile'),
-    path('booking/create/', booking_create_view, name='booking-create'),
 ]
-
