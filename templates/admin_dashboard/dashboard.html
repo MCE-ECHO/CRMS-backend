@@ -2,106 +2,78 @@
 {% load static %}
 {% block title %}Admin Dashboard{% endblock %}
 {% block extra_scripts %}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}
 {% block content %}
-    <div class="card">
-        <h1 class="text-3xl font-bold mb-6 text-center">Admin Dashboard</h1>
-
-        <!-- Tabs for Statistics and Data Management -->
-        <div class="tabs mb-6">
-            <button class="tab-button active" data-tab="statistics">Statistics</button>
-            <button class="tab-button" data-tab="data-management">Data Management</button>
-        </div>
-
-        <!-- Statistics Section -->
-        <div id="statistics" class="tab-content">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <section class="card">
-                    <h2 class="text-xl font-semibold mb-4">Classroom Usage</h2>
-                    <canvas id="usageChart"></canvas>
-                </section>
-                <section class="card">
-                    <h2 class="text-xl font-semibold mb-4">Peak Usage Hours</h2>
-                    <canvas id="peakHoursChart"></canvas>
-                </section>
-                <section class="card">
-                    <h2 class="text-xl font-semibold mb-4">Faculty Activity</h2>
-                    <canvas id="activeFacultyChart"></canvas>
-                </section>
-            </div>
-        </div>
-
-        <!-- Data Management Section -->
-        <div id="data-management" class="tab-content hidden">
-            <!-- Upload Timetable -->
-            <div class="card mb-6">
-                <h2 class="text-xl font-semibold mb-4">Upload Timetable</h2>
-                <form id="uploadForm" method="post" enctype="multipart/form-data" action="{% url 'admin_dashboard:upload-timetable' %}" data-action="{% url 'admin_dashboard:upload-timetable' %}" class="form-group space-y-2">
-                    {% csrf_token %}
-                    <input type="file" name="file" accept=".csv, .xlsx" required class="w-full p-2 border rounded">
-                    <button type="submit" class="approve w-full">Upload</button>
-                </form>
-                <div id="uploadStatus" class="mt-4"></div>
-            </div>
-
-            <!-- Timetable Management -->
-            <div class="card mb-6">
-                <h2 class="text-xl font-semibold mb-4 flex justify-between items-center">
-                    Timetable Management
-                    <button class="export" onclick="exportCSV()">Export to CSV</button>
-                </h2>
-                <div class="loading" id="timetableLoading">Loading timetable data...</div>
-                <div class="overflow-x-auto">
-                    <table id="timetableTable" class="w-full" style="display:none;">
-                        <thead>
-                            <tr>
-                                <th>Day</th>
-                                <th>Start Time</th>
-                                <th>End Time</th>
-                                <th>Classroom</th>
-                                <th>Teacher</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Booking Management -->
-            <div class="card">
-                <h2 class="text-xl font-semibold mb-4">Booking Requests</h2>
-                <div class="loading" id="bookingLoading">Loading booking requests...</div>
-                <div class="overflow-x-auto">
-                    <table id="bookingTable" class="w-full" style="display:none;">
-                        <thead>
-                            <tr>
-                                <th>User</th>
-                                <th>Classroom</th>
-                                <th>Date</th>
-                                <th>Time</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Tab functionality
-        document.querySelectorAll('.tab-button').forEach(button => {
-            button.addEventListener('click', () => {
-                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-                document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
-                document.getElementById(button.dataset.tab).classList.remove('hidden');
-            });
-        });
-    </script>
+<div class="card">
+    <h2>Admin Dashboard</h2>
+    <p>Pending Bookings: {{ pending_bookings }}</p>
+    <h3>Upload Timetable</h3>
+    <form id="uploadForm" method="post" enctype="multipart/form-data" action="{% url 'admin_dashboard:upload-timetable' %}" class="space-y-4">
+        {% csrf_token %}
+        <div class="dropzone">Drag and drop a CSV/Excel file here or click to browse</div>
+        <input type="file" name="file" id="fileInput" accept=".csv,.xlsx" class="hidden">
+        <button type="submit" class="btn btn-primary w-full">Upload</button>
+    </form>
+    <h3>Timetable</h3>
+    <div id="timetableLoading">Loading...</div>
+    <table id="timetableTable" style="display: none;">
+        <thead>
+            <tr>
+                <th>Day</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Classroom</th>
+                <th>Teacher</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <button onclick="exportCSV()" class="btn btn-secondary mt-4">Export Timetable as CSV</button>
+    <h3>Usage Statistics</h3>
+    <canvas id="usageChart"></canvas>
+    <h3>Peak Hours</h3>
+    <canvas id="peakHoursChart"></canvas>
+    <h3>Active Faculty</h3>
+    <canvas id="activeFacultyChart"></canvas>
+    <h3>Bookings</h3>
+    <div id="bookingLoading">Loading...</div>
+    <table id="bookingTable" style="display: none;">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Classroom</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <h3>Upcoming Events</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Visibility</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in upcoming_events %}
+                <tr>
+                    <td>{{ event.title }}</td>
+                    <td>{{ event.start_date|date:"Y-m-d H:i" }}</td>
+                    <td>{{ event.end_date|date:"Y-m-d H:i" }}</td>
+                    <td>{{ event.visibility }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="4">No upcoming events.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}
