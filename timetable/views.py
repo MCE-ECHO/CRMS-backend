@@ -9,6 +9,7 @@ from .serializers import TimetableSerializer
 
 class TeacherTimetableView(APIView):
     def get(self, request, user_id):
+        # Get timetable for a specific teacher
         teacher = get_object_or_404(User, id=user_id, is_staff=True)
         timetable = Timetable.objects.filter(teacher=teacher).select_related('classroom')
         serializer = TimetableSerializer(timetable, many=True)
@@ -16,6 +17,7 @@ class TeacherTimetableView(APIView):
 
 class AllTimetableView(APIView):
     def get(self, request):
+        # Get all timetable entries
         timetables = Timetable.objects.all().select_related('classroom', 'teacher')
         serializer = TimetableSerializer(timetables, many=True)
         return Response(serializer.data)
