@@ -5,6 +5,7 @@ from accounts.views import home_redirect_view
 from django.conf import settings
 from django.conf.urls.static import static
 
+# Main URL patterns
 urlpatterns = [
     path('', home_redirect_view, name='home'),
     path('admin/', admin.site.urls),
@@ -13,9 +14,11 @@ urlpatterns = [
     path('timetable/', include('timetable.urls')),
     path('booking/', include('booking.urls')),
     path('admin-dashboard/', include('admin_dashboard.urls')),
+    path('public/', include('public_views.urls')),  # Added for public student views
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 ]
 
+# Serve media files in debug mode
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
