@@ -4,29 +4,27 @@
 {% block content %}
     <div class="card">
         <h2 class="text-2xl font-bold mb-6 text-center">Welcome, {{ request.user.get_full_name|default:request.user.username }}</h2>
-        {% if profile %}
-            <div class="card mb-6">
-                <h3 class="text-xl font-semibold mb-4">Profile</h3>
-                <div class="flex items-center space-x-4">
-                    {% if profile.avatar %}
-                        <img src="{{ profile.avatar.url }}" alt="Avatar" class="w-16 h-16 rounded-full shadow-md">
-                    {% else %}
-                        <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center shadow-md">
-                            <span class="text-gray-500 text-xl">{{ request.user.username|first }}</span>
-                        </div>
-                    {% endif %}
-                    <div>
-                        <p><strong>Department:</strong> {{ profile.department|default:"Not set" }}</p>
-                        <p><strong>Phone:</strong> {{ profile.phone|default:"Not set" }}</p>
-                        <p><strong>Bio:</strong> {{ profile.bio|default:"Not set" }}</p>
+        <!-- Profile Section -->
+        <div class="card mb-6">
+            <h3 class="text-xl font-semibold mb-4">Profile</h3>
+            <div class="flex items-center space-x-4">
+                {% if profile.avatar %}
+                    <img src="{{ profile.avatar.url }}" alt="Avatar" class="w-16 h-16 rounded-full shadow-md">
+                {% else %}
+                    <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center shadow-md">
+                        <span class="text-gray-500 text-xl">{{ request.user.username|first }}</span>
                     </div>
+                {% endif %}
+                <div>
+                    <p><strong>Department:</strong> {{ profile.department|default:"Not set" }}</p>
+                    <p><strong>Phone:</strong> {{ profile.phone|default:"Not set" }}</p>
+                    <p><strong>Bio:</strong> {{ profile.bio|default:"Not set" }}</p>
                 </div>
             </div>
-        {% else %}
-            <p class="text-red-500 text-center">No profile information available.</p>
-        {% endif %}
+        </div>
 
-        <div class="card">
+        <!-- Timetable Section -->
+        <div class="card mb-6">
             <h3 class="text-xl font-semibold mb-4">Your Timetable</h3>
             <div class="overflow-x-auto">
                 <table class="w-full">
@@ -54,6 +52,66 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+
+        <!-- Bookings Section -->
+        <div class="card mb-6">
+            <h3 class="text-xl font-semibold mb-4">Your Bookings</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr>
+                            <th>Classroom</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in bookings %}
+                            <tr>
+                                <td>{{ b.classroom.name }}</td>
+                                <td>{{ b.date }}</td>
+                                <td>{{ b.start_time }} - {{ b.end_time }}</td>
+                                <td>{{ b.status|capfirst }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No bookings made.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Booking Form -->
+        <div class="card">
+            <h3 class="text-xl font-semibold mb-4">Book a Classroom</h3>
+            <form method="post" action="{% url 'booking-create' %}" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label for="classroom" class="block text-sm font-medium">Classroom</label>
+                    <select name="classroom" required class="w-full p-2 border rounded">
+                        {% for c in classrooms %}
+                            <option value="{{ c.id }}">{{ c.name }} ({{ c.block.name }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="date" class="block text-sm font-medium">Date</label>
+                    <input type="date" name="date" required class="w-full p-2 border rounded">
+                </div>
+                <div>
+                    <label for="start_time" class="block text-sm font-medium">Start Time</label>
+                    <input type="time" name="start_time" required class="w-full p-2 border rounded">
+                </div>
+                <div>
+                    <label for="end_time" class="block text-sm font-medium">End Time</label>
+                    <input type="time" name="end_time" required class="w-full p-2 border rounded">
+                </div>
+                <button type="submit" class="approve w-full">Submit Booking</button>
+            </form>
         </div>
     </div>
 {% endblock %}
