@@ -1,3 +1,9 @@
 from django.test import TestCase
 
-# Create your tests here.
+# Add tests as needed
+class AdminDashboardTestCase(TestCase):
+    def setUp(self):
+        pass
+
+    def test_placeholder(self):
+        self.assertTrue(True)
