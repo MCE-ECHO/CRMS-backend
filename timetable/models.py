@@ -13,6 +13,7 @@ class Timetable(models.Model):
     block_name = models.CharField(max_length=50, blank=True, null=True)
 
     def clean(self):
+        # Validate timetable entry
         if self.start_time >= self.end_time:
             raise ValidationError("End time must be after start time.")
 
@@ -27,6 +28,9 @@ class Timetable(models.Model):
             raise ValidationError("This time slot is already booked for this classroom.")
 
     def save(self, *args, **kwargs):
+        # Update block_name automatically
+        if self.classroom and self.classroom.block:
+            self.block_name = self.classroom.block.name
         self.full_clean()
         super().save(*args, **kwargs)
 
