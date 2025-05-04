@@ -13,6 +13,9 @@ from .views import (
     classroom_list,
     teacher_list,
     export_timetable_csv,
+    BookingListView,
+    approve_booking,
+    reject_booking,
 )
 
 urlpatterns = [
@@ -29,4 +32,7 @@ urlpatterns = [
     path('timetable/export/', export_timetable_csv, name='export-timetable-csv'),
     path('classrooms/', classroom_list, name='classroom-list'),
     path('teachers/', teacher_list, name='teacher-list'),
+    path('bookings/', BookingListView.as_view(), name='booking-list'),
+    path('bookings/<int:pk>/approve/', approve_booking, name='approve-booking'),
+    path('bookings/<int:pk>/reject/', reject_booking, name='reject-booking'),
 ]
