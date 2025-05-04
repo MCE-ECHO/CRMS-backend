@@ -1,14 +1,13 @@
 {% extends "base.html" %}
-{% block title %}Welcome{% endblock %}
+{% load static %}
+{% block title %}Welcome to CLASSROOMS{% endblock %}
 {% block content %}
-    <div class="text-center card">
-        <h1 class="text-3xl font-bold mb-4">Welcome to the Classroom System</h1>
-        <p class="text-lg mb-6 text-gray-600">Manage classrooms, timetables, and more with ease.</p>
-        {% if not user.is_authenticated %}
-            <div class="flex justify-center gap-4">
-                <a href="{% url 'login' %}" class="approve">Login</a>
-                <a href="{% url 'public_views:student-portal' %}" class="export">Student Portal</a>
-            </div>
-        {% endif %}
+<div class="hero">
+    <h1>Welcome to CLASSROOMS</h1>
+    <p>Manage your classroom schedules, bookings, and events with ease.</p>
+    <div class="mt-6 space-y-4 sm:space-y-0 sm:space-x-4">
+        <a href="{% url 'login' %}" class="btn btn-primary">Login</a>
+        <a href="{% url 'public_views:public-student-portal' %}" class="btn btn-secondary">Student Portal</a>
     </div>
+</div>
 {% endblock %}
