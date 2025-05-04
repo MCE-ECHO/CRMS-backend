@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import student_timetable_view, student_available_classrooms, student_portal
 
-app_name='public_views' #Define the namespace
+app_name = 'public_views'
 
 urlpatterns = [
     path('timetable/', student_timetable_view, name='public-timetable'),
