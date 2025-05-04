@@ -1,33 +1,26 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Classrooms{% endblock %}
 {% block content %}
-    <div class="card">
-        <h1 class="text-2xl font-bold mb-6 text-center">Classrooms</h1>
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Block</th>
-                        <th>Status</th>
-                        <th>Capacity</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for classroom in classrooms %}
-                        <tr>
-                            <td>{{ classroom.name }}</td>
-                            <td>{{ classroom.block.name }}</td>
-                            <td>{{ classroom.status|capfirst }}</td>
-                            <td>{{ classroom.capacity }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="4" class="text-center">No classrooms found.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+<div class="card">
+    <h2>Classrooms</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Block</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for classroom in classrooms %}
+                <tr>
+                    <td>{{ classroom.name }}</td>
+                    <td>{{ classroom.block.name }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="2">No classrooms found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}
