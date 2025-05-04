@@ -38,7 +38,8 @@
             <!-- Upload Timetable -->
             <div class="card mb-6">
                 <h2 class="text-xl font-semibold mb-4">Upload Timetable</h2>
-                <form id="uploadForm" enctype="multipart/form-data" class="form-group space-y-2">
+                <form id="uploadForm" method="post" enctype="multipart/form-data" action="{% url 'admin_dashboard:upload-timetable' %}" class="form-group space-y-2">
+                    {% csrf_token %}
                     <input type="file" name="file" accept=".csv, .xlsx" required class="w-full p-2 border rounded">
                     <button type="submit" class="approve w-full">Upload</button>
                 </form>
