@@ -1,7 +1,13 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from timetable.models import Timetable
-from classroom.models import Classroom
+from classroom.models import Classroom, Block
+
+@admin.register(Block)
+class BlockAdmin(admin.ModelAdmin):
+    list_display = ['name']
+    search_fields = ['name']
+    list_per_page = 50
 
 @admin.register(Timetable)
 class TimetableAdmin(admin.ModelAdmin):
@@ -25,10 +31,11 @@ class ClassroomAdmin(admin.ModelAdmin):
     list_per_page = 50
 
     def status_badge(self, obj):
-        color = 'green' if obj.status == 'free' else 'red'
+        color = 'green' if obj.status == 'free' else 'red' if obj.status == 'occupied' else 'orange'
+        display_text = obj.get_status_display()  # Uses choices' human-readable name
         return format_html(
             '<span style="color: white; background-color: {}; padding: 2px 8px; border-radius: 4px;">{}</span>',
             color,
-            'Available' if obj.status == 'free' else 'Occupied'
+            display_text
         )
     status_badge.short_description = 'Status'
