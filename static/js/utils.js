@@ -15,4 +15,5 @@ function showAlert(title, message, icon = 'success') {
 function handleError(error, elementId, message) {
     document.getElementById(elementId).innerHTML = `<p class="text-red-500">${message}</p>`;
     console.error(error);
+    showAlert('Error', message, 'error');
 }
