@@ -1,9 +1,6 @@
 from django.test import TestCase
 
-# Add tests as needed
-class PublicViewsTestCase(TestCase):
-    def setUp(self):
-        pass
-
-    def test_placeholder(self):
-        self.assertTrue(True)
+class PublicViewsTests(TestCase):
+    def test_student_portal_access(self):
+        response = self.client.get('/public/portal/')
+        self.assertEqual(response.status_code, 200)
