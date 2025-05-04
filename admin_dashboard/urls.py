@@ -16,9 +16,11 @@ from .views import (
     BookingListView,
     approve_booking,
     reject_booking,
+    event_create_view,
+    event_list_view,
 )
 
-app_name = 'admin_dashboard'  # Define the namespace
+app_name = 'admin_dashboard'
 
 urlpatterns = [
     path('', admin_dashboard_view, name='admin-dashboard'),
@@ -37,4 +39,6 @@ urlpatterns = [
     path('bookings/', BookingListView.as_view(), name='booking-list'),
     path('bookings/<int:pk>/approve/', approve_booking, name='approve-booking'),
     path('bookings/<int:pk>/reject/', reject_booking, name='reject-booking'),
+    path('events/create/', event_create_view, name='event-create'),
+    path('events/', event_list_view, name='event-list'),
 ]
