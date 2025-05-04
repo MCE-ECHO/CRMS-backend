@@ -1,22 +1,71 @@
 {% load static %}
-<nav class="flex flex-col md:flex-row justify-between items-center">
-    <a href="{% url 'home' %}" class="text-2xl font-bold text-gray-800 mb-2 md:mb-0 hover:text-blue-500 transition">Classroom System</a>
-    <div class="flex gap-4">
+<div class="sidebar hidden" id="sidebar">
+    <ul class="mt-16">
         {% if user.is_authenticated %}
+            <li><a href="{% url 'accounts:profile' %}" class="{% if request.path == '/accounts/profile/' %}active{% endif %}">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+                Profile
+            </a></li>
             {% if user.is_superuser %}
-                <a href="{% url 'admin_dashboard:admin-dashboard' %}" class="text-blue-600 hover:text-blue-800 transition">Admin Dashboard</a>
+                <li><a href="{% url 'admin_dashboard:admin-dashboard' %}" class="{% if request.path == '/admin-dashboard/' %}active{% endif %}">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+                    </svg>
+                    Admin Dashboard
+                </a></li>
             {% elif user.is_staff %}
-                <a href="{% url 'accounts:teacher-dashboard' %}" class="text-blue-600 hover:text-blue-800 transition">Teacher Dashboard</a>
+                <li><a href="{% url 'accounts:teacher-dashboard' %}" class="{% if request.path == '/accounts/teacher/dashboard/' %}active{% endif %}">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 14l9-5-9-5-9 5 9 5zm0 7l-9-5V9l9 5 9-5v7l-9 5z"/>
+                    </svg>
+                    Teacher Dashboard
+                </a></li>
+                <li><a href="{% url 'accounts:booking-create' %}" class="{% if request.path == '/accounts/booking/create/' %}active{% endif %}">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                    </svg>
+                    Create Booking
+                </a></li>
+                <li><a href="{% url 'accounts:event-create' %}" class="{% if request.path == '/accounts/events/create/' %}active{% endif %}">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 3h4v4M17 17v4h4M3 17h4v4M3 7V3h4m5-2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm7 7H7v7h10v-7z"/>
+                    </svg>
+                    Create Event
+                </a></li>
             {% else %}
-                <a href="{% url 'public_views:student-portal' %}" class="text-blue-600 hover:text-blue-800 transition">Student Portal</a>
+                <li><a href="{% url 'public_views:public-student-portal' %}" class="{% if request.path == '/public/portal/' %}active{% endif %}">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 14l9-5-9-5-9 5 9 5zm0 7l-9-5V9l9 5 9-5v7l-9 5z"/>
+                    </svg>
+                    Student Portal
+                </a></li>
             {% endif %}
-            <a href="{% url 'accounts:profile' %}" class="text-blue-600 hover:text-blue-800 transition">Profile</a>
-            <form action="{% url 'logout' %}" method="post" style="display: inline;">
-                {% csrf_token %}
-                <button type="submit" class="text-blue-600 hover:text-blue-800 transition">Logout</button>
-            </form>
+            <li><a href="{% url 'accounts:event-list' %}" class="{% if request.path == '/accounts/events/' %}active{% endif %}">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                </svg>
+                Events
+            </a></li>
+            <li><a href="{% url 'logout' %}">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h4m7 14l5-5-5-5m5 5H11"/>
+                </svg>
+                Logout
+            </a></li>
         {% else %}
-            <a href="{% url 'login' %}" class="text-blue-600 hover:text-blue-800 transition">Login</a>
+            <li><a href="{% url 'login' %}" class="{% if request.path == '/login/' %}active{% endif %}">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 3h4c1.1 0 2 .9 2 2v14c0 1.1-.9 2-2 2h-4M10 17l5-5-5-5m-7 5h12"/>
+                </svg>
+                Login
+            </a></li>
         {% endif %}
-    </div>
-</nav>
+    </ul>
+</div>
+<button class="sidebar-toggle">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M4 6h16M4 12h16M4 18h16"/>
+    </svg>
+</button>
