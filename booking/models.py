@@ -19,10 +19,29 @@ class Booking(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
 
     def clean(self):
+        # Validate booking times and date
         if self.start_time >= self.end_time:
             raise ValidationError("End time must be after start time.")
         if self.date and self.date < timezone.now().date():
             raise ValidationError("Booking date cannot be in the past.")
+        # Check for conflicts with existing bookings or timetable
+        conflicts = Booking.objects.filter(
+            classroom=self.classroom,
+            date=self.date,
+            start_time__lt=self.end_time,
+            end_time__gt=self.start_time,
+            status='approved'
+        ).exclude(id=self.id)
+        if conflicts.exists():
+            raise ValidationError("This classroom is already booked for the selected time.")
+        timetable_conflicts = Timetable.objects.filter(
+            classroom=self.classroom,
+            day=self.date.strftime('%A'),
+            start_time__lt=self.end_time,
+            end_time__gt=self.start_time
+        )
+        if timetable_conflicts.exists():
+            raise ValidationError("This classroom is scheduled in the timetable for the selected time.")
 
     def save(self, *args, **kwargs):
         self.full_clean()
