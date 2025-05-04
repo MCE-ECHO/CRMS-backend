@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Events{% endblock %}
+{% block extra_scripts %}
+    <script src="{% static 'js/calendar.js' %}"></script>
+{% endblock %}
+{% block content %}
+<div class="card">
+    <h2>Events</h2>
+    <div id="calendar" data-events='{% for event in events %}{"title":"{{ event.title }}","start":"{{ event.start_date|date:'c' }}","end":"{{ event.end_date|date:'c' }}"} {% endfor %}'></div>
+</div>
+{% endblock %}
