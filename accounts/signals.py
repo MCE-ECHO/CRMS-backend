@@ -5,9 +5,15 @@ from .models import TeacherProfile, StudentProfile
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
-    # Automatically create a profile when a user is created
     if created:
-        if instance.is_staff or instance.is_superuser:
+        if instance.is_staff:
             TeacherProfile.objects.create(user=instance)
         else:
             StudentProfile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    if hasattr(instance, 'teacherprofile'):
+        instance.teacherprofile.save()
+    elif hasattr(instance, 'studentprofile'):
+        instance.studentprofile.save()
