@@ -1,4 +1,7 @@
 from django import forms
 
 class UploadFileForm(forms.Form):
-    file = forms.FileField(widget=forms.FileInput(attrs={'class': 'w-full p-2 border rounded', 'accept': '.csv,.xlsx'}))
+    file = forms.FileField(
+        label='Select a CSV or Excel file',
+        widget=forms.FileInput(attrs={'accept': '.csv,.xlsx', 'class': 'w-full p-3 border rounded-lg', 'id': 'fileInput'})
+    )
