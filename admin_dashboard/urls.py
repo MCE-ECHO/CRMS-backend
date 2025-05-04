@@ -18,6 +18,8 @@ from .views import (
     reject_booking,
 )
 
+app_name = 'admin_dashboard'  # Define the namespace
+
 urlpatterns = [
     path('', admin_dashboard_view, name='admin-dashboard'),
     path('upload-timetable/', TimetableUploadView.as_view(), name='upload-timetable'),
