@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (uploadForm) {
         uploadForm.addEventListener('submit', function(e) {
             e.preventDefault();
+            document.getElementById('uploadStatus').innerHTML = '<div class="loading">Uploading...</div>';
             const formData = new FormData(this);
             fetch('/admin-dashboard/upload-timetable/', {
                 method: 'POST',
@@ -11,13 +12,15 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.json())
             .then(data => {
-                document.getElementById('uploadStatus').innerHTML = `<p>${data.message}</p>`;
+                let statusHtml = `<p>${data.message}</p>`;
                 if (data.errors) {
                     data.errors.forEach(error => {
-                        document.getElementById('uploadStatus').innerHTML += `<p class="text-red-500">${error}</p>`;
+                        statusHtml += `<p class="text-red-500">${error}</p>`;
                     });
                 }
+                document.getElementById('uploadStatus').innerHTML = statusHtml;
                 loadTimetable();
+                loadBookings();
                 showAlert('Success', data.message);
             })
             .catch(error => {
@@ -116,6 +119,33 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function loadBookings() {
+        if (document.getElementById('bookingTable')) {
+            fetch('/admin-dashboard/bookings/')
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.querySelector('#bookingTable tbody');
+                    tbody.innerHTML = data.map(item => `
+                        <tr data-id="${item.id}">
+                            <td>${item.user}</td>
+                            <td>${item.classroom}</td>
+                            <td>${item.date}</td>
+                            <td>${item.start_time} - ${item.end_time}</td>
+                            <td>${item.status}</td>
+                            <td class="form-group flex gap-2">
+                                ${item.status === 'pending' ? `
+                                    <button class="approve" onclick="approveBooking(${item.id})">Approve</button>
+                                    <button class="reject" onclick="rejectBooking(${item.id})">Reject</button>
+                                ` : ''}
+                            </td>
+                        </tr>
+                    `).join('');
+                    document.getElementById('bookingTable').style.display = 'table';
+                    document.getElementById('bookingLoading').style.display = 'none';
+                });
+        }
+    }
+
     window.saveTimetable = function(id) {
         const row = document.querySelector(`tr[data-id='${id}']`);
         const inputs = row.querySelectorAll('input');
@@ -162,10 +192,35 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
 
+    window.approveBooking = function(id) {
+        fetch(`/admin-dashboard/bookings/${id}/approve/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCSRFToken() }
+        })
+        .then(() => {
+            showAlert('Approved!', 'Booking approved successfully');
+            loadBookings();
+        })
+        .catch(() => showAlert('Error', 'Failed to approve booking', 'error'));
+    };
+
+    window.rejectBooking = function(id) {
+        fetch(`/admin-dashboard/bookings/${id}/reject/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCSRFToken() }
+        })
+        .then(() => {
+            showAlert('Rejected!', 'Booking rejected successfully');
+            loadBookings();
+        })
+        .catch(() => showAlert('Error', 'Failed to reject booking', 'error'));
+    };
+
     window.exportCSV = function() {
         window.location.href = '/admin-dashboard/timetable/export/';
     };
 
     initCharts();
     loadTimetable();
+    loadBookings();
 });
