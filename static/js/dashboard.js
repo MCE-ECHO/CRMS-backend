@@ -5,7 +5,8 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             document.getElementById('uploadStatus').innerHTML = '<div class="loading">Uploading...</div>';
             const formData = new FormData(this);
-            fetch('/admin-dashboard/upload-timetable/', {
+            const actionUrl = this.getAttribute('data-action');  // Use the data-action attribute
+            fetch(actionUrl, {
                 method: 'POST',
                 headers: { 'X-CSRFToken': getCSRFToken() },
                 body: formData
