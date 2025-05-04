@@ -1,117 +1,97 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}Teacher Dashboard{% endblock %}
+{% block extra_scripts %}
+    <script src="{% static 'js/teacher_dashboard.js' %}"></script>
+{% endblock %}
 {% block content %}
-    <div class="card">
-        <h2 class="text-2xl font-bold mb-6 text-center">Welcome, {{ request.user.get_full_name|default:request.user.username }}</h2>
-        <!-- Profile Section -->
-        <div class="card mb-6">
-            <h3 class="text-xl font-semibold mb-4">Profile</h3>
-            <div class="flex items-center space-x-4">
-                {% if profile.avatar %}
-                    <img src="{{ profile.avatar.url }}" alt="Avatar" class="w-16 h-16 rounded-full shadow-md">
-                {% else %}
-                    <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center shadow-md">
-                        <span class="text-gray-500 text-xl">{{ request.user.username|first }}</span>
-                    </div>
-                {% endif %}
-                <div>
-                    <p><strong>Department:</strong> {{ profile.department|default:"Not set" }}</p>
-                    <p><strong>Phone:</strong> {{ profile.phone|default:"Not set" }}</p>
-                    <p><strong>Bio:</strong> {{ profile.bio|default:"Not set" }}</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Timetable Section -->
-        <div class="card mb-6">
-            <h3 class="text-xl font-semibold mb-4">Your Timetable</h3>
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead>
-                        <tr>
-                            <th>Day</th>
-                            <th>Time</th>
-                            <th>Classroom</th>
-                            <th>Subject</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for t in timetable %}
-                            <tr>
-                                <td>{{ t.day }}</td>
-                                <td>{{ t.start_time }} - {{ t.end_time }}</td>
-                                <td>{{ t.classroom.name }}</td>
-                                <td>{{ t.subject_name|default:"N/A" }}</td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="4" class="text-center">No classes assigned.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Bookings Section -->
-        <div class="card mb-6">
-            <h3 class="text-xl font-semibold mb-4">Your Bookings</h3>
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead>
-                        <tr>
-                            <th>Classroom</th>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for b in bookings %}
-                            <tr>
-                                <td>{{ b.classroom.name }}</td>
-                                <td>{{ b.date }}</td>
-                                <td>{{ b.start_time }} - {{ b.end_time }}</td>
-                                <td>{{ b.status|capfirst }}</td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="4" class="text-center">No bookings made.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Booking Form -->
-        <div class="card">
-            <h3 class="text-xl font-semibold mb-4">Book a Classroom</h3>
-            <form method="post" action="{% url 'booking-create' %}" class="space-y-4">
-                {% csrf_token %}
-                <div>
-                    <label for="classroom" class="block text-sm font-medium">Classroom</label>
-                    <select name="classroom" required class="w-full p-2 border rounded">
-                        {% for c in classrooms %}
-                            <option value="{{ c.id }}">{{ c.name }} ({{ c.block.name }})</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div>
-                    <label for="date" class="block text-sm font-medium">Date</label>
-                    <input type="date" name="date" required class="w-full p-2 border rounded">
-                </div>
-                <div>
-                    <label for="start_time" class="block text-sm font-medium">Start Time</label>
-                    <input type="time" name="start_time" required class="w-full p-2 border rounded">
-                </div>
-                <div>
-                    <label for="end_time" class="block text-sm font-medium">End Time</label>
-                    <input type="time" name="end_time" required class="w-full p-2 border rounded">
-                </div>
-                <button type="submit" class="approve w-full">Submit Booking</button>
-            </form>
-        </div>
+<div class="card">
+    <h2>Welcome, {{ profile }}</h2>
+    <div class="mb-4">
+        <label for="dayFilter" class="block">Filter by Day</label>
+        <select id="dayFilter" class="w-full p-3 border rounded-lg">
+            <option value="">All Days</option>
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option>
+            <option value="Saturday">Saturday</option>
+            <option value="Sunday">Sunday</option>
+        </select>
     </div>
+    <h3>Your Timetable</h3>
+    <table id="timetableTable">
+        <thead>
+            <tr>
+                <th>Day</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Classroom</th>
+                <th>Subject</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in timetable %}
+                <tr class="timetable-row" data-day="{{ entry.day }}">
+                    <td>{{ entry.day }}</td>
+                    <td>{{ entry.start_time }}</td>
+                    <td>{{ entry.end_time }}</td>
+                    <td>{{ entry.classroom.name }}</td>
+                    <td>{{ entry.subject_name }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5">No timetable entries found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <h3>Your Bookings</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Classroom</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+                <tr>
+                    <td>{{ booking.classroom.name }}</td>
+                    <td>{{ booking.date }}</td>
+                    <td>{{ booking.start_time }} - {{ booking.end_time }}</td>
+                    <td>{{ booking.status }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="4">No bookings found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <h3>Create Booking</h3>
+    <form method="post" id="bookingForm" action="{% url 'accounts:booking-create' %}" class="space-y-4">
+        {% csrf_token %}
+        <div>
+            <label for="classroom" class="block">Classroom</label>
+            <select name="classroom" id="classroom" required class="w-full p-3 border rounded-lg">
+                {% for c in classrooms %}
+                    <option value="{{ c.id }}">{{ c.name }} ({{ c.block.name }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="date" class="block">Date</label>
+            <input type="date" name="date" id="date" required class="w-full p-3 border rounded-lg">
+        </div>
+        <div>
+            <label for="start_time" class="block">Start Time</label>
+            <input type="time" name="start_time" id="start_time" required class="w-full p-3 border rounded-lg">
+        </div>
+        <div>
+            <label for="end_time" class="block">End Time</label>
+            <input type="time" name="end_time" id="end_time" required class="w-full p-3 border rounded-lg">
+        </div>
+        <button type="submit" class="btn btn-primary w-full">Submit Booking</button>
+    </form>
+</div>
 {% endblock %}
