@@ -21,7 +21,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     document.getElementById('timetableResults').innerHTML = html;
                 })
-                .catch(error => handleError(error, 'timetableResults', 'Error fetching timetable.'));
+                .catch(error => {
+                    Swal.fire('Error', 'Error fetching timetable.', 'error');
+                });
         });
     }
 
@@ -47,7 +49,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     document.getElementById('availabilityResults').innerHTML = html;
                 })
-                .catch(error => handleError(error, 'availabilityResults', 'Error fetching availability.'));
+                .catch(error => {
+                    Swal.fire('Error', 'Error fetching availability.', 'error');
+                });
+        });
+    }
+
+    // Search
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            const timetableForm = document.getElementById('timetableForm');
+            if (query) {
+                timetableForm.classroom.value = query;
+                timetableForm.dispatchEvent(new Event('submit'));
+            }
         });
     }
 });
