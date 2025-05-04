@@ -31,11 +31,11 @@ def home_redirect_view(request):
     # Redirect users based on their role
     if request.user.is_authenticated:
         if is_admin(request.user):
-            return redirect('admin-dashboard')
+            return redirect('admin_dashboard:admin-dashboard')  # Use namespaced URL
         elif is_teacher(request.user):
-            return redirect('teacher-dashboard')
+            return redirect('accounts:teacher-dashboard')  # Use namespaced URL
         else:
-            return redirect('public-student-portal')
+            return redirect('public_views:student-portal')  # Use namespaced URL
     return render(request, 'home.html')
 
 @login_required
@@ -68,7 +68,7 @@ def profile_view(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'Profile updated successfully.')
-            return redirect('profile')
+            return redirect('accounts:profile')  # Use namespaced URL
     else:
         form = form_class(instance=profile)
 
@@ -99,4 +99,4 @@ def booking_create_view(request):
         messages.success(request, 'Booking request submitted successfully.')
     except Exception as e:
         messages.error(request, f'Error creating booking: {str(e)}')
-    return redirect('teacher-dashboard')
+    return redirect('accounts:teacher-dashboard')  # Use namespaced URL
