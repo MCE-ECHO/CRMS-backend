@@ -4,13 +4,13 @@
     <div class="flex gap-4">
         {% if user.is_authenticated %}
             {% if user.is_superuser %}
-                <a href="{% url 'admin-dashboard' %}" class="text-blue-600 hover:text-blue-800 transition">Admin Dashboard</a>
+                <a href="{% url 'admin_dashboard:admin-dashboard' %}" class="text-blue-600 hover:text-blue-800 transition">Admin Dashboard</a>
             {% elif user.is_staff %}
-                <a href="{% url 'teacher-dashboard' %}" class="text-blue-600 hover:text-blue-800 transition">Teacher Dashboard</a>
+                <a href="{% url 'accounts:teacher-dashboard' %}" class="text-blue-600 hover:text-blue-800 transition">Teacher Dashboard</a>
             {% else %}
-                <a href="{% url 'student-portal' %}" class="text-blue-600 hover:text-blue-800 transition">Student Portal</a>
+                <a href="{% url 'public_views:student-portal' %}" class="text-blue-600 hover:text-blue-800 transition">Student Portal</a>
             {% endif %}
-            <a href="{% url 'profile' %}" class="text-blue-600 hover:text-blue-800 transition">Profile</a>
+            <a href="{% url 'accounts:profile' %}" class="text-blue-600 hover:text-blue-800 transition">Profile</a>
             <form action="{% url 'logout' %}" method="post" style="display: inline;">
                 {% csrf_token %}
                 <button type="submit" class="text-blue-600 hover:text-blue-800 transition">Logout</button>
