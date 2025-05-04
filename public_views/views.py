@@ -3,24 +3,30 @@ from django.http import JsonResponse
 from timetable.models import Timetable
 from classroom.models import Classroom
 from datetime import datetime
+from django.db.models import Q
+
+def student_portal(request):
+    return render(request, 'public_views/student_portal.html')
 
 def student_timetable_view(request):
-    # Public view for timetable by classroom
-    class_name = request.GET.get('classroom')
-    if not class_name:
-        return JsonResponse({'error': 'Missing classroom parameter'}, status=400)
+    classroom_name = request.GET.get('classroom')
+    if not classroom_name:
+        return JsonResponse({'error': 'Classroom name is required'}, status=400)
 
-    entries = Timetable.objects.filter(classroom__name=class_name).select_related('teacher')
-    data = [{
-        'day': e.day,
-        'start_time': e.start_time.strftime('%H:%M'),
-        'end_time': e.end_time.strftime('%H:%M'),
-        'teacher': e.teacher.username if e.teacher else 'N/A',
-    } for e in entries]
-    return JsonResponse(data, safe=False)
+    try:
+        classroom = Classroom.objects.get(name__icontains=classroom_name)
+        timetable = Timetable.objects.filter(classroom=classroom).select_related('teacher')
+        data = [{
+            'day': entry.day,
+            'start_time': entry.start_time.strftime('%H:%M'),
+            'end_time': entry.end_time.strftime('%H:%M'),
+            'teacher': entry.teacher.username if entry.teacher else 'N/A'
+        } for entry in timetable]
+        return JsonResponse(data, safe=False)
+    except Classroom.DoesNotExist:
+        return JsonResponse({'error': 'Classroom not found'}, status=404)
 
 def student_available_classrooms(request):
-    # Public view for available classrooms
     date = request.GET.get('date')
     start = request.GET.get('start_time')
     end = request.GET.get('end_time')
@@ -30,11 +36,8 @@ def student_available_classrooms(request):
         start_time = datetime.strptime(start, "%H:%M").time()
         end_time = datetime.strptime(end, "%H:%M").time()
         search_date = datetime.strptime(date, "%Y-%m-%d").date()
-    except (ValueError, TypeError) as e:
-        return JsonResponse({'error': f'Invalid time/date format: {str(e)}'}, status=400)
-
-    if search_date < datetime.now().date():
-        return JsonResponse({'error': 'Date cannot be in the past'}, status=400)
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Invalid time/date format'}, status=400)
 
     booked_ids = Timetable.objects.filter(
         day=search_date.strftime('%A'),
@@ -42,13 +45,10 @@ def student_available_classrooms(request):
         end_time__gt=start_time
     ).values_list('classroom_id', flat=True)
 
-    available_rooms = Classroom.objects.exclude(id__in=booked_ids).select_related('block')
+    query = Q(id__not_in=booked_ids)
     if block:
-        available_rooms = available_rooms.filter(block__name__icontains=block)
+        query &= Q(block__name__icontains=block)
 
-    data = [{'name': c.name, 'block': c.block.name} for c in available_rooms]
+    classrooms = Classroom.objects.filter(query).select_related('block')
+    data = [{'name': c.name, 'block': c.block.name} for c in classrooms]
     return JsonResponse(data, safe=False)
-
-def student_portal(request):
-    # Public student portal page
-    return render(request, 'public_views/student_portal.html')
