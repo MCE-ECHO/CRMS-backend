@@ -32,36 +32,5 @@
                 <div id="availabilityResults" class="mt-4"></div>
             </section>
         </div>
-
-        <!-- Timetable -->
-        <div class="card">
-            <h2 class="text-xl font-semibold mb-4">Your Timetable</h2>
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead>
-                        <tr>
-                            <th>Day</th>
-                            <th>Time</th>
-                            <th>Classroom</th>
-                            <th>Subject</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for t in timetable %}
-                            <tr>
-                                <td>{{ t.day }}</td>
-                                <td>{{ t.start_time }} - {{ t.end_time }}</td>
-                                <td>{{ t.classroom.name }}</td>
-                                <td>{{ t.subject_name|default:"N/A" }}</td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="4" class="text-center">No classes assigned.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </div>
 {% endblock %}
