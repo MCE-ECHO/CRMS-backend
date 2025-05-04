@@ -1,5 +1,7 @@
 def is_teacher(user):
-    return hasattr(user, 'teacherprofile')
+    # Check if the user is a teacher
+    return hasattr(user, 'teacherprofile') and user.is_authenticated
 
 def is_admin(user):
-    return user.is_staff or user.is_superuser
+    # Check if the user is an admin
+    return (user.is_staff or user.is_superuser) and user.is_authenticated
