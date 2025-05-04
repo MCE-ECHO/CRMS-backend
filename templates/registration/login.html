@@ -1,17 +1,23 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Login{% endblock %}
 {% block content %}
-    <div class="max-w-md mx-auto card">
-        <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
-        <form method="post" class="space-y-4">
-            {% csrf_token %}
-            <div class="space-y-2">
-                {{ form.as_p }}
-                <button type="submit" class="approve w-full">Login</button>
-            </div>
-        </form>
-        {% if form.errors %}
-            <p class="text-red-500 mt-4 text-center">Invalid username or password.</p>
-        {% endif %}
-    </div>
+<div class="card max-w-md mx-auto mt-16">
+    <h2 class="text-center">Login</h2>
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <div>
+            <label for="username" class="block">Username</label>
+            <input type="text" name="username" id="username" required class="w-full p-3 border rounded-lg">
+        </div>
+        <div>
+            <label for="password" class="block">Password</label>
+            <input type="password" name="password" id="password" required class="w-full p-3 border rounded-lg">
+        </div>
+        <button type="submit" class="btn btn-primary w-full">Login</button>
+    </form>
+    {% if form.errors %}
+        <p class="text-red-500 mt-4 text-center">Invalid username or password.</p>
+    {% endif %}
+</div>
 {% endblock %}
