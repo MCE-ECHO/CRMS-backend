@@ -4,7 +4,7 @@ from datetime import datetime
 from django.db.models import Count
 from django.db.models.functions import ExtractHour
 from django.contrib.auth.models import User
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib.auth.decorators import user_passes_test
 from rest_framework.views import APIView
@@ -13,25 +13,31 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework import serializers, status
 from rest_framework.permissions import IsAdminUser
-
 from timetable.models import Timetable
 from classroom.models import Classroom
 from booking.models import Booking
 from booking.serializers import BookingSerializer
-from .forms import UploadFileForm
 from accounts.utils import is_admin
+from accounts.models import Event
+from accounts.views import EventForm
+from django.contrib import messages
 
 @user_passes_test(is_admin)
 def admin_dashboard_view(request):
-    # Admin dashboard main view
-    return render(request, 'admin_dashboard/dashboard.html')
+    """Render admin dashboard with quick actions and notifications."""
+    pending_bookings = Booking.objects.filter(status='pending').count()
+    upcoming_events = Event.objects.filter(start_date__gte=datetime.now()).order_by('start_date')[:5]
+    return render(request, 'admin_dashboard/dashboard.html', {
+        'pending_bookings': pending_bookings,
+        'upcoming_events': upcoming_events,
+    })
 
 class TimetableUploadView(APIView):
     parser_classes = [MultiPartParser]
     permission_classes = [IsAdminUser]
 
     def post(self, request, *args, **kwargs):
-        # Handle timetable file upload
+        """Handle timetable file upload and validation."""
         file = request.FILES.get('file')
         if not file:
             return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
@@ -112,7 +118,7 @@ class TimetableSerializer(serializers.ModelSerializer):
 @api_view(['GET'])
 @user_passes_test(is_admin)
 def all_timetables(request):
-    # Retrieve all timetable entries
+    """Retrieve all timetable entries."""
     entries = Timetable.objects.select_related('classroom', 'teacher').all()
     serializer = TimetableSerializer(entries, many=True)
     return Response(serializer.data)
@@ -120,7 +126,7 @@ def all_timetables(request):
 @api_view(['POST'])
 @user_passes_test(is_admin)
 def add_timetable(request):
-    # Add a new timetable entry
+    """Add a new timetable entry."""
     serializer = TimetableSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
@@ -130,7 +136,7 @@ def add_timetable(request):
 @api_view(['PUT'])
 @user_passes_test(is_admin)
 def update_timetable(request, pk):
-    # Update an existing timetable entry
+    """Update an existing timetable entry."""
     try:
         entry = Timetable.objects.get(pk=pk)
         serializer = TimetableSerializer(entry, data=request.data)
@@ -144,7 +150,7 @@ def update_timetable(request, pk):
 @api_view(['DELETE'])
 @user_passes_test(is_admin)
 def delete_timetable(request, pk):
-    # Delete a timetable entry
+    """Delete a timetable entry."""
     try:
         entry = Timetable.objects.get(pk=pk)
         entry.delete()
@@ -156,7 +162,7 @@ class UsageStatsView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        # Classroom usage statistics
+        """Classroom usage statistics."""
         usage_data = Timetable.objects.values('classroom__name').annotate(
             count=Count('classroom')
         ).order_by('-count')
@@ -169,7 +175,7 @@ class PeakHoursView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        # Peak usage hours statistics
+        """Peak usage hours statistics."""
         data = Timetable.objects.annotate(hour=ExtractHour('start_time')) \
             .values('hour').annotate(count=Count('id')).order_by('hour')
         return Response({
@@ -181,7 +187,7 @@ class ActiveFacultyView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        # Faculty activity statistics
+        """Faculty activity statistics."""
         data = Timetable.objects.values('teacher__username') \
             .annotate(count=Count('id')).order_by('-count')
         return Response({
@@ -192,7 +198,7 @@ class ActiveFacultyView(APIView):
 @api_view(['GET'])
 @user_passes_test(is_admin)
 def available_classrooms(request):
-    # Check available classrooms
+    """Check available classrooms."""
     date = request.GET.get('date')
     start = request.GET.get('start_time')
     end = request.GET.get('end_time')
@@ -220,14 +226,14 @@ def available_classrooms(request):
 @api_view(['GET'])
 @user_passes_test(is_admin)
 def classroom_list(request):
-    # List all classrooms
+    """List all classrooms."""
     data = [{'id': c.id, 'name': c.name} for c in Classroom.objects.all()]
     return Response(data)
 
 @api_view(['GET'])
 @user_passes_test(is_admin)
 def teacher_list(request):
-    # List all teachers
+    """List all teachers."""
     users = User.objects.filter(is_staff=True)
     data = [{'id': u.id, 'username': u.username} for u in users]
     return Response(data)
@@ -235,7 +241,7 @@ def teacher_list(request):
 @api_view(['GET'])
 @user_passes_test(is_admin)
 def export_timetable_csv(request):
-    # Export timetable as CSV
+    """Export timetable as CSV."""
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="timetable_export.csv"'
 
@@ -258,7 +264,7 @@ class BookingListView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        # List all bookings for admin review
+        """List all bookings for admin review."""
         bookings = Booking.objects.all().select_related('user', 'classroom')
         serializer = BookingSerializer(bookings, many=True)
         return Response(serializer.data)
@@ -266,7 +272,7 @@ class BookingListView(APIView):
 @api_view(['POST'])
 @user_passes_test(is_admin)
 def approve_booking(request, pk):
-    # Approve a booking
+    """Approve a booking."""
     try:
         booking = Booking.objects.get(pk=pk)
         booking.status = 'approved'
@@ -278,7 +284,7 @@ def approve_booking(request, pk):
 @api_view(['POST'])
 @user_passes_test(is_admin)
 def reject_booking(request, pk):
-    # Reject a booking
+    """Reject a booking."""
     try:
         booking = Booking.objects.get(pk=pk)
         booking.status = 'rejected'
@@ -286,3 +292,26 @@ def reject_booking(request, pk):
         return Response({'message': 'Booking rejected'}, status=status.HTTP_200_OK)
     except Booking.DoesNotExist:
         return Response({'error': 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@user_passes_test(is_admin)
+def event_create_view(request):
+    """Handle event creation by admins."""
+    if request.method == 'POST':
+        form = EventForm(request.POST)
+        if form.is_valid():
+            event = form.save(commit=False)
+            event.created_by = request.user
+            event.save()
+            messages.success(request, 'Event created successfully.')
+            return redirect('admin_dashboard:admin-dashboard')
+        else:
+            messages.error(request, 'Error creating event. Please check the form.')
+    else:
+        form = EventForm()
+    return render(request, 'admin_dashboard/event_create.html', {'form': form})
+
+@user_passes_test(is_admin)
+def event_list_view(request):
+    """Display all events for admins."""
+    events = Event.objects.all()
+    return render(request, 'admin_dashboard/event_list.html', {'events': events})
