@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Create Event{% endblock %}
+{% block content %}
+<div class="card max-w-lg mx-auto">
+    <h2>Create New Event</h2>
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary w-full">Create Event</button>
+    </form>
+</div>
+{% endblock %}
