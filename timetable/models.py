@@ -1,38 +1,24 @@
 from django.db import models
 from django.contrib.auth.models import User
 from classroom.models import Classroom
-from django.core.exceptions import ValidationError
 
 class Timetable(models.Model):
-    day = models.CharField(max_length=10)
-    start_time = models.TimeField()
-    end_time = models.TimeField()
-    subject_name = models.CharField(max_length=100, blank=True, null=True)
+    DAYS_OF_WEEK = [
+        ('Monday', 'Monday'),
+        ('Tuesday', 'Tuesday'),
+        ('Wednesday', 'Wednesday'),
+        ('Thursday', 'Thursday'),
+        ('Friday', 'Friday'),
+        ('Saturday', 'Saturday'),
+        ('Sunday', 'Sunday'),
+    ]
+
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE)
     teacher = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    block_name = models.CharField(max_length=50, blank=True, null=True)
-
-    def clean(self):
-        # Validate timetable entry
-        if self.start_time >= self.end_time:
-            raise ValidationError("End time must be after start time.")
-
-        conflicts = Timetable.objects.filter(
-            classroom=self.classroom,
-            day=self.day,
-            start_time__lt=self.end_time,
-            end_time__gt=self.start_time
-        ).exclude(id=self.id)
-
-        if conflicts.exists():
-            raise ValidationError("This time slot is already booked for this classroom.")
-
-    def save(self, *args, **kwargs):
-        # Update block_name automatically
-        if self.classroom and self.classroom.block:
-            self.block_name = self.classroom.block.name
-        self.full_clean()
-        super().save(*args, **kwargs)
+    day = models.CharField(max_length=10, choices=DAYS_OF_WEEK)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    subject_name = models.CharField(max_length=100, blank=True)
 
     def __str__(self):
-        return f"{self.day} - {self.start_time.strftime('%H:%M')} to {self.end_time.strftime('%H:%M')} - {self.classroom} - {self.teacher}"
+        return f"{self.classroom.name} - {self.day} {self.start_time}-{self.end_time}"
