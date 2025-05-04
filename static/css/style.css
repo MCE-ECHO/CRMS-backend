@@ -1,7 +1,13 @@
+---
+
+### `static` Folder
+
+#### `static/css/style.css`
+```css
 /* General Styles */
 body {
     font-family: 'Roboto', Arial, sans-serif;
-    background-color: #FFFFFF; /* White (60%) */
+    background-color: #FFFFFF; /* White */
     color: #333;
     line-height: 1.6;
     margin: 0;
@@ -15,7 +21,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 a {
-    color: #ADD8E6; /* Light Blue (10%) */
+    color: #ADD8E6; /* Light Blue */
     text-decoration: none;
     transition: color 0.3s ease;
 }
@@ -27,7 +33,7 @@ a:hover {
 
 /* Layout Styles */
 header, footer {
-    background-color: #FFD7BE; /* Light Peach (30%) */
+    background-color: #FFD7BE; /* Light Peach */
     padding: 1rem;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
@@ -57,7 +63,7 @@ th, td {
 }
 
 th {
-    background-color: #ADD8E6; /* Light Blue (10%) */
+    background-color: #ADD8E6; /* Light Blue */
     font-weight: 600;
     color: #333;
 }
@@ -128,7 +134,7 @@ button:hover {
 }
 
 .export {
-    background-color: #ADD8E6; /* Light Blue (10%) */
+    background-color: #ADD8E6; /* Light Blue */
     color: #333;
 }
 
@@ -166,6 +172,32 @@ button:hover {
 @keyframes fade {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.tab-button {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    background-color: #ecf0f1;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.tab-button.active {
+    background-color: #ADD8E6;
+    color: #fff;
+}
+
+.tab-button:hover {
+    background-color: #bdc3c7;
 }
 
 /* Responsive Design */
