@@ -19,7 +19,7 @@ media/
 uploads/
 
 # Django migrations - ignore all except __init__.py
-**/migrations/
+**/migrations/*
 !**/migrations/__init__.py
 
 # IDEs and editors
@@ -53,12 +53,12 @@ celerybeat-schedule
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
-# Static files collected by collectstatic
-/static/
-
 # Ignore environment variable files
 .env
 .env.*
 
 # Ignore local settings if any
 local_settings.py
+
+# Node modules (if you ever add frontend tooling)
+node_modules/
