@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Timetable Management{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>Timetable Management</h1>
+    <p>View and manage classroom timetables.</p>
+</div>
+
+<div class="card">
+    <h2>Timetable</h2>
+    <button onclick="exportCSV()" class="btn btn-secondary mb-4">Export to CSV</button>
+    <div id="timetableLoading">Loading...</div>
+    <table id="timetableTable" style="display: none;">
+        <thead>
+            <tr>
+                <th>Day</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Classroom</th>
+                <th>Teacher</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+{% endblock %}
+
