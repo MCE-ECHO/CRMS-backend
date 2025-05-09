@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<main class="p-6 max-w-6xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">Timetable</h1>
+    <div class="bg-white shadow-lg rounded-lg p-6">
+        <h2 class="text-xl mb-4">Filter Timetable</h2>
+        <form method="get" class="mb-4">
+            <label for="block" class="block mb-1 font-semibold">Filter by Block</label>
+            <select name="block" id="block" class="w-full p-3 border rounded-lg" onchange="this.form.submit()">
+                <option value="">All Blocks</option>
+                {% for block in blocks %}
+                    <option value="{{ block.id }}" {% if selected_block == block.id|stringformat:"s" %}selected{% endif %}>{{ block.name }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        {% if timetables %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr>
+                            <th>Classroom</th>
+                            <th>Block</th>
+                            <th>Teacher</th>
+                            <th>Day</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Subject</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for timetable in timetables %}
+                            <tr>
+                                <td>{{ timetable.classroom.name }}</td>
+                                <td>{{ timetable.classroom.block.name }}</td>
+                                <td>{{ timetable.teacher.username }}</td>
+                                <td>{{ timetable.day }}</td>
+                                <td>{{ timetable.start_time|time:"H:i" }}</td>
+                                <td>{{ timetable.end_time|time:"H:i" }}</td>
+                                <td>{{ timetable.subject_name|default:"N/A" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No timetable entries found.</p>
+        {% endif %}
+        <a href="{% url 'public_views:public-student-portal' %}" class="btn btn-secondary mt-4">Back to Portal</a>
+    </div>
+</main>
+{% endblock %}
+

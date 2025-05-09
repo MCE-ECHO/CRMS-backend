@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<main class="p-6 max-w-lg mx-auto">
+    <h1 class="text-2xl font-bold mb-6">Create Timetable Entry</h1>
+    <div class="bg-white shadow-lg rounded-lg p-6">
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary w-full">Create Timetable Entry</button>
+        </form>
+        {% if messages %}
+            <div class="mt-4">
+                {% for message in messages %}
+                    <p class="{% if message.tags == 'error' %}text-red-500{% else %}text-green-500{% endif %}">{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</main>
+{% endblock %}
+
