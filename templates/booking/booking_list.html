@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Bookings{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/teacher_dashboard.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>Bookings</h1>
+    <p>View your classroom bookings.</p>
+</div>
+
+<div class="card">
+    <h2>My Bookings</h2>
+    <table id="teacherBookings" style="display: none;">
+        <thead>
+            <tr>
+                <th>Classroom</th>
+                <th>Date</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+{% endblock %}
+
