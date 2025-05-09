@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load static %}
 {% block title %}Login{% endblock %}
 {% block content %}
 <div class="card max-w-md mx-auto mt-16">
@@ -8,11 +7,11 @@
         {% csrf_token %}
         <div>
             <label for="username" class="block">Username</label>
-            <input type="text" name="username" id="username" required class="w-full p-3 border rounded-lg">
+            <input type="text" name="username" id="username" required class="w-full">
         </div>
         <div>
             <label for="password" class="block">Password</label>
-            <input type="password" name="password" id="password" required class="w-full p-3 border rounded-lg">
+            <input type="password" name="password" id="password" required class="w-full">
         </div>
         <button type="submit" class="btn btn-primary w-full">Login</button>
     </form>
@@ -21,3 +20,4 @@
     {% endif %}
 </div>
 {% endblock %}
+
