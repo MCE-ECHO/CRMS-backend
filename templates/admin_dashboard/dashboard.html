@@ -1,79 +1,109 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Admin Dashboard{% endblock %}
-{% block extra_scripts %}
-    <script src="{% static 'js/dashboard.js' %}"></script>
-{% endblock %}
+
 {% block content %}
-<div class="card">
-    <h2>Admin Dashboard</h2>
-    <p>Pending Bookings: {{ pending_bookings }}</p>
-    <h3>Upload Timetable</h3>
-    <form id="uploadForm" method="post" enctype="multipart/form-data" action="{% url 'admin_dashboard:upload-timetable' %}" class="space-y-4">
-        {% csrf_token %}
-        <div class="dropzone">Drag and drop a CSV/Excel file here or click to browse</div>
-        <input type="file" name="file" id="fileInput" accept=".csv,.xlsx" class="hidden">
-        <button type="submit" class="btn btn-primary w-full">Upload</button>
-    </form>
-    <h3>Timetable</h3>
-    <div id="timetableLoading">Loading...</div>
-    <table id="timetableTable" style="display: none;">
-        <thead>
-            <tr>
-                <th>Day</th>
-                <th>Start Time</th>
-                <th>End Time</th>
-                <th>Classroom</th>
-                <th>Teacher</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-    <button onclick="exportCSV()" class="btn btn-secondary mt-4">Export Timetable as CSV</button>
-    <h3>Usage Statistics</h3>
-    <canvas id="usageChart"></canvas>
-    <h3>Peak Hours</h3>
-    <canvas id="peakHoursChart"></canvas>
-    <h3>Active Faculty</h3>
-    <canvas id="activeFacultyChart"></canvas>
-    <h3>Bookings</h3>
-    <div id="bookingLoading">Loading...</div>
-    <table id="bookingTable" style="display: none;">
-        <thead>
-            <tr>
-                <th>User</th>
-                <th>Classroom</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-    <h3>Upcoming Events</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Start Date</th>
-                <th>End Date</th>
-                <th>Visibility</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for event in upcoming_events %}
-                <tr>
-                    <td>{{ event.title }}</td>
-                    <td>{{ event.start_date|date:"Y-m-d H:i" }}</td>
-                    <td>{{ event.end_date|date:"Y-m-d H:i" }}</td>
-                    <td>{{ event.visibility }}</td>
-                </tr>
-            {% empty %}
-                <tr><td colspan="4">No upcoming events.</td></tr>
+<main class="p-6 max-w-6xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6">Admin Dashboard</h1>
+
+    <!-- Pending Bookings and Upcoming Events -->
+    <div class="bg-white shadow-lg rounded-lg mb-6 p-4">
+        <h2 class="text-xl mb-2 font-semibold">Overview</h2>
+        <p><strong>Pending Bookings:</strong> {{ pending_bookings }}</p>
+        <h3 class="text-lg mt-4 font-medium">Upcoming Events</h3>
+        {% if upcoming_events %}
+            <ul class="list-disc ml-6 mt-2 space-y-1">
+                {% for event in upcoming_events %}
+                    <li>
+                        <span class="font-semibold">{{ event.title }}</span> –
+                        <span class="text-gray-700">{{ event.start_date|date:"Y-m-d H:i" }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-gray-500">No upcoming events.</p>
+        {% endif %}
+    </div>
+
+    <!-- Usage Stats -->
+    <div class="bg-white shadow-lg rounded-lg mb-6 p-4">
+        <h2 class="text-xl font-semibold mb-4">Usage Statistics</h2>
+        <label for="blockFilter" class="block mb-2">Filter by Block</label>
+        <select id="blockFilter" class="w-full p-3 border rounded-lg mb-4">
+            <option value="">All Blocks</option>
+            {% for block in blocks %}
+                <option value="{{ block.id }}">{{ block.name }}</option>
             {% endfor %}
-        </tbody>
-    </table>
-</div>
+        </select>
+        <canvas id="usageChart" height="200"></canvas>
+    </div>
+
+    <!-- Upload Timetable -->
+    <div class="bg-white shadow-lg rounded-lg mb-6 p-4">
+        <h2 class="text-xl font-semibold mb-4">Upload Timetable</h2>
+        <form id="uploadForm" method="post" enctype="multipart/form-data"
+              action="{% url 'admin_dashboard:upload-timetable' %}" class="space-y-4">
+            {% csrf_token %}
+            <div id="dropzone" class="p-4 border border-dashed rounded-lg text-center cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
+                <p>Drag and drop a CSV/Excel file here or click to browse</p>
+                <input type="file" name="file" id="fileInput" accept=".csv,.xlsx" class="hidden">
+            </div>
+            <button type="submit" class="btn btn-primary w-full">Upload</button>
+        </form>
+        {% if messages %}
+            <div class="mt-4">
+                {% for message in messages %}
+                    <p class="{% if message.tags == 'error' %}text-red-500{% elif message.tags == 'warning' %}text-yellow-500{% else %}text-green-500{% endif %}">
+                        {{ message }}
+                    </p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Quick Links -->
+    <div class="bg-white shadow-lg rounded-lg p-4">
+        <h2 class="text-xl font-semibold mb-4">Quick Links</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <a href="{% url 'admin_dashboard:timetable-management' %}" class="btn btn-secondary">Timetable Management</a>
+            <a href="{% url 'admin_dashboard:booking-management' %}" class="btn btn-secondary">Booking Management</a>
+            <a href="{% url 'admin_dashboard:event-management' %}" class="btn btn-secondary">Event Management</a>
+            <a href="{% url 'admin_dashboard:event-create' %}" class="btn btn-secondary">Create Event</a>
+            <a href="{% url 'admin_dashboard:event-list' %}" class="btn btn-secondary">View All Events</a>
+            <a href="{% url 'admin_dashboard:export-timetable-csv' %}" class="btn btn-secondary">Export Timetable as CSV</a>
+        </div>
+    </div>
+</main>
 {% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
+<script>
+    // Drag-and-drop for file upload
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', e => {
+        e.preventDefault();
+        dropzone.classList.add('bg-blue-50');
+    });
+    dropzone.addEventListener('dragleave', e => {
+        dropzone.classList.remove('bg-blue-50');
+    });
+    dropzone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropzone.classList.remove('bg-blue-50');
+        fileInput.files = e.dataTransfer.files;
+    });
+
+    // Usage stats chart (handled by dashboard.js, but ensure blockFilter triggers reload)
+    document.getElementById('blockFilter').addEventListener('change', function() {
+        // You should implement a function in dashboard.js to reload the chart with the selected block
+        if (typeof loadUsageChart === "function") {
+            loadUsageChart(this.value);
+        }
+    });
+</script>
+{% endblock %}
+
