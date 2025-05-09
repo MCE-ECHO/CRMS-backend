@@ -1,10 +1,17 @@
 from django.urls import path
-from .views import student_timetable_view, student_available_classrooms, student_portal
+from .views import (
+    student_portal_view,
+    classroom_list_view,
+    availability_view,
+    public_classroom_list
+)
 
 app_name = 'public_views'
 
 urlpatterns = [
-    path('timetable/', student_timetable_view, name='public-timetable'),
-    path('available-classrooms/', student_available_classrooms, name='public-available-classrooms'),
-    path('portal/', student_portal, name='public-student-portal'),
+    path('student-portal/', student_portal_view, name='public-student-portal'),
+    path('classrooms/', classroom_list_view, name='public-classroom-list'),
+    path('availability/', availability_view, name='public-availability'),
+    path('api/classrooms/', public_classroom_list, name='public-api-classroom-list'),
 ]
+
