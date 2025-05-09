@@ -1,45 +1,57 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Student Portal{% endblock %}
-{% block extra_scripts %}
-    <script src="{% static 'js/timetable.js' %}"></script>
-{% endblock %}
+
 {% block content %}
-<div class="card">
-    <h2>Student Portal</h2>
-    <div class="mb-4">
-        <label for="searchInput" class="block">Search Classroom</label>
-        <input type="text" id="searchInput" placeholder="Enter classroom name" class="w-full p-3 border rounded-lg">
+<main class="p-6 max-w-2xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">Student Portal</h1>
+    <div class="bg-white shadow-lg rounded-lg p-6">
+        <h2 class="text-xl mb-4">Welcome, {{ user.username }}</h2>
+        <div class="mb-6">
+            <h3 class="text-lg">Quick Actions</h3>
+            <ul class="space-y-2">
+                <li><a href="{% url 'booking:booking-create' %}" class="btn btn-primary">Book a Classroom</a></li>
+                <li><a href="{% url 'public_views:public-classroom-list' %}" class="btn btn-secondary">View Classrooms</a></li>
+                <li><a href="{% url 'public_views:public-availability' %}" class="btn btn-secondary">Check Availability</a></li>
+                <li><a href="{% url 'booking:booking-list' %}" class="btn btn-secondary">My Bookings</a></li>
+            </ul>
+        </div>
+        <h3 class="text-lg mb-2">Recent Bookings</h3>
+        {% if bookings %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr>
+                            <th>Classroom</th>
+                            <th>Date</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                            <tr>
+                                <td>{{ booking.classroom.name }}</td>
+                                <td>{{ booking.date }}</td>
+                                <td>{{ booking.start_time|time:"H:i" }}</td>
+                                <td>{{ booking.end_time|time:"H:i" }}</td>
+                                <td>
+                                    <span class="px-2 py-1 rounded
+                                        {% if booking.status == 'approved' %}bg-green-100 text-green-800
+                                        {% elif booking.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                        {% else %}bg-red-100 text-red-800{% endif %}">
+                                        {{ booking.get_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No recent bookings.</p>
+        {% endif %}
     </div>
-    <h3>Timetable</h3>
-    <form id="timetableForm" class="space-y-4">
-        <div>
-            <label for="classroom" class="block">Classroom</label>
-            <input type="text" name="classroom" id="classroom" required class="w-full p-3 border rounded-lg">
-        </div>
-        <button type="submit" class="btn btn-primary w-full">Search Timetable</button>
-    </form>
-    <div id="timetableResults" class="mt-4"></div>
-    <h3>Check Classroom Availability</h3>
-    <form id="availabilityForm" class="space-y-4">
-        <div>
-            <label for="date" class="block">Date</label>
-            <input type="date" name="date" id="date" required class="w-full p-3 border rounded-lg">
-        </div>
-        <div>
-            <label for="start_time" class="block">Start Time</label>
-            <input type="time" name="start_time" id="start_time" required class="w-full p-3 border rounded-lg">
-        </div>
-        <div>
-            <label for="end_time" class="block">End Time</label>
-            <input type="time" name="end_time" id="end_time" required class="w-full p-3 border rounded-lg">
-        </div>
-        <div>
-            <label for="block" class="block">Block (optional)</label>
-            <input type="text" name="block" id="block" class="w-full p-3 border rounded-lg">
-        </div>
-        <button type="submit" class="btn btn-primary w-full">Check Availability</button>
-    </form>
-    <div id="availabilityResults" class="mt-4"></div>
-</div>
+</main>
 {% endblock %}
+
