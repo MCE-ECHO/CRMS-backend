@@ -1,26 +1,39 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Classrooms{% endblock %}
+
 {% block content %}
-<div class="card">
-    <h2>Classrooms</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Block</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for classroom in classrooms %}
-                <tr>
-                    <td>{{ classroom.name }}</td>
-                    <td>{{ classroom.block.name }}</td>
-                </tr>
-            {% empty %}
-                <tr><td colspan="2">No classrooms found.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+<main class="p-6 max-w-2xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">Available Classrooms</h1>
+    <div class="bg-white shadow-lg rounded-lg p-6">
+        <h2 class="text-xl mb-4">Filter Classrooms</h2>
+        <form method="get" class="mb-4">
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary mt-2">Apply Filter</button>
+        </form>
+        {% if classrooms %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Block</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for classroom in classrooms %}
+                            <tr>
+                                <td>{{ classroom.name }}</td>
+                                <td>{{ classroom.block.name }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No classrooms found.</p>
+        {% endif %}
+        <a href="{% url 'home' %}" class="btn btn-secondary mt-4">Back to Home</a>
+    </div>
+</main>
 {% endblock %}
+
