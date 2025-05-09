@@ -1,54 +1,90 @@
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from classroom.models import Classroom, Block
 from timetable.models import Timetable
-from classroom.models import Classroom
+from booking.models import Booking
 from datetime import datetime
-from django.db.models import Q
+from django import forms
 
-def student_portal(request):
-    return render(request, 'public_views/student_portal.html')
+class AvailabilityForm(forms.Form):
+    block = forms.ModelChoiceField(
+        queryset=Block.objects.all(),
+        required=False,
+        empty_label="All Blocks",
+        widget=forms.Select(attrs={'class': 'w-full p-3 border rounded-lg'})
+    )
+    date = forms.DateField(
+        widget=forms.DateInput(attrs={'class': 'w-full p-3 border rounded-lg', 'type': 'date'})
+    )
+    start_time = forms.TimeField(
+        widget=forms.TimeInput(attrs={'class': 'w-full p-3 border rounded-lg', 'type': 'time'})
+    )
+    end_time = forms.TimeField(
+        widget=forms.TimeInput(attrs={'class': 'w-full p-3 border rounded-lg', 'type': 'time'})
+    )
 
-def student_timetable_view(request):
-    classroom_name = request.GET.get('classroom')
-    if not classroom_name:
-        return JsonResponse({'error': 'Classroom name is required'}, status=400)
+class ClassroomFilterForm(forms.Form):
+    block = forms.ModelChoiceField(
+        queryset=Block.objects.all(),
+        required=False,
+        empty_label="All Blocks",
+        widget=forms.Select(attrs={'class': 'w-full p-3 border rounded-lg'})
+    )
 
-    try:
-        classroom = Classroom.objects.get(name__icontains=classroom_name)
-        timetable = Timetable.objects.filter(classroom=classroom).select_related('teacher')
-        data = [{
-            'day': entry.day,
-            'start_time': entry.start_time.strftime('%H:%M'),
-            'end_time': entry.end_time.strftime('%H:%M'),
-            'teacher': entry.teacher.username if entry.teacher else 'N/A'
-        } for entry in timetable]
-        return JsonResponse(data, safe=False)
-    except Classroom.DoesNotExist:
-        return JsonResponse({'error': 'Classroom not found'}, status=404)
+@login_required
+def student_portal_view(request):
+    bookings = Booking.objects.filter(user=request.user).select_related('classroom').order_by('-created_at')[:5]
+    return render(request, 'public_views/student_portal.html', {'bookings': bookings})
 
-def student_available_classrooms(request):
-    date = request.GET.get('date')
-    start = request.GET.get('start_time')
-    end = request.GET.get('end_time')
-    block = request.GET.get('block')
+@login_required
+def classroom_list_view(request):
+    form = ClassroomFilterForm(request.GET or None)
+    classrooms = Classroom.objects.all().select_related('block')
+    if form.is_valid() and form.cleaned_data['block']:
+        classrooms = classrooms.filter(block=form.cleaned_data['block'])
+    return render(request, 'public_views/classroom_list.html', {
+        'form': form,
+        'classrooms': classrooms
+    })
 
-    try:
-        start_time = datetime.strptime(start, "%H:%M").time()
-        end_time = datetime.strptime(end, "%H:%M").time()
-        search_date = datetime.strptime(date, "%Y-%m-%d").date()
-    except (ValueError, TypeError):
-        return JsonResponse({'error': 'Invalid time/date format'}, status=400)
+@login_required
+def availability_view(request):
+    form = AvailabilityForm(request.GET or None)
+    classrooms = []
+    if form.is_valid():
+        date = form.cleaned_data['date']
+        start_time = form.cleaned_data['start_time']
+        end_time = form.cleaned_data['end_time']
+        block = form.cleaned_data['block']
 
-    booked_ids = Timetable.objects.filter(
-        day=search_date.strftime('%A'),
-        start_time__lt=end_time,
-        end_time__gt=start_time
-    ).values_list('classroom_id', flat=True)
+        # Timetable conflicts
+        booked_ids = set(Timetable.objects.filter(
+            day=date.strftime('%A'),
+            start_time__lt=end_time,
+            end_time__gt=start_time
+        ).values_list('classroom_id', flat=True))
 
-    query = Q(id__not_in=booked_ids)
-    if block:
-        query &= Q(block__name__icontains=block)
+        # Booking conflicts (approved only)
+        booked_ids.update(Booking.objects.filter(
+            date=date,
+            start_time__lt=end_time,
+            end_time__gt=start_time,
+            status='approved'
+        ).values_list('classroom_id', flat=True))
 
-    classrooms = Classroom.objects.filter(query).select_related('block')
-    data = [{'name': c.name, 'block': c.block.name} for c in classrooms]
-    return JsonResponse(data, safe=False)
+        classrooms = Classroom.objects.exclude(id__in=booked_ids).select_related('block')
+        if block:
+            classrooms = classrooms.filter(block=block)
+
+    return render(request, 'public_views/availability.html', {
+        'form': form,
+        'classrooms': classrooms
+    })
+
+@api_view(['GET'])
+def public_classroom_list(request):
+    data = [{'id': c.id, 'name': c.name, 'block': c.block.name} for c in Classroom.objects.select_related('block')]
+    return Response(data)
+
