@@ -50,4 +50,4 @@ document.addEventListener('DOMContentLoaded', function () {
         return days.indexOf(day);
     }
 });
-  
+
