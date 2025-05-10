@@ -1,6 +1,10 @@
 from django.urls import path
 from .views import (
-    booking_create_view, booking_list_view, BookingListView, approve_booking, reject_booking
+    booking_create_view,
+    booking_list_view,
+    BookingListView,
+    approve_booking,
+    reject_booking,
 )
 
 app_name = 'booking'
