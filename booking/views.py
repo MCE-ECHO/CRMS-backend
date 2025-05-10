@@ -42,7 +42,7 @@ def booking_create_view(request):
             else:
                 booking.save()
                 messages.success(request, 'Booking request submitted successfully.')
-                return redirect('booking:booking-list')
+            return redirect('booking:booking-list')
         else:
             messages.error(request, 'Error creating booking. Please check the form.')
     else:
