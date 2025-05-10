@@ -1,23 +1,14 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+
 {% block title %}Login{% endblock %}
+
 {% block content %}
-<div class="card max-w-md mx-auto mt-16">
-    <h2 class="text-center">Login</h2>
-    <form method="post" class="space-y-4">
+<div class="container mx-auto p-6 max-w-md">
+    <h1 class="text-3xl font-bold mb-6 text-center">Login</h1>
+    <form method="post">
         {% csrf_token %}
-        <div>
-            <label for="username" class="block">Username</label>
-            <input type="text" name="username" id="username" required class="w-full">
-        </div>
-        <div>
-            <label for="password" class="block">Password</label>
-            <input type="password" name="password" id="password" required class="w-full">
-        </div>
+        {{ form.as_p }}
         <button type="submit" class="btn btn-primary w-full">Login</button>
     </form>
-    {% if form.errors %}
-        <p class="text-red-500 mt-4 text-center">Invalid username or password.</p>
-    {% endif %}
 </div>
 {% endblock %}
-
