@@ -14,7 +14,7 @@ class TimetableModelTests(TestCase):
             day='Monday',
             start_time='10:00',
             end_time='11:00',
-            subject_name='Mathematics'
+            subject_name='Math'
         )
 
     def test_timetable_str(self):
