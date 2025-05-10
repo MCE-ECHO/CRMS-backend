@@ -1,57 +1,45 @@
-{% extends "base.html" %}
-{% load static %}
+{% extends 'base.html' %}
+
+{% block title %}Student Portal{% endblock %}
 
 {% block content %}
-<main class="p-6 max-w-2xl mx-auto">
-    <h1 class="text-2xl font-bold mb-6">Student Portal</h1>
-    <div class="bg-white shadow-lg rounded-lg p-6">
-        <h2 class="text-xl mb-4">Welcome, {{ user.username }}</h2>
-        <div class="mb-6">
-            <h3 class="text-lg">Quick Actions</h3>
-            <ul class="space-y-2">
-                <li><a href="{% url 'booking:booking-create' %}" class="btn btn-primary">Book a Classroom</a></li>
-                <li><a href="{% url 'public_views:public-classroom-list' %}" class="btn btn-secondary">View Classrooms</a></li>
-                <li><a href="{% url 'public_views:public-availability' %}" class="btn btn-secondary">Check Availability</a></li>
-                <li><a href="{% url 'booking:booking-list' %}" class="btn btn-secondary">My Bookings</a></li>
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">Student Portal</h1>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="card">
+            <h3>My Recent Bookings</h3>
+            <table class="w-full">
+                <thead>
+                    <tr>
+                        <th>Classroom</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                    <tr>
+                        <td>{{ booking.classroom.name }}</td>
+                        <td>{{ booking.date }}</td>
+                        <td>{{ booking.status }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center">No recent bookings.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <a href="{% url 'booking:booking-create' %}" class="btn btn-primary mt-4">Book a Classroom</a>
+        </div>
+        <div class="card">
+            <h3>Quick Links</h3>
+            <ul class="list-disc pl-5">
+                <li><a href="{% url 'public_views:public-classroom-list' %}">View Classrooms</a></li>
+                <li><a href="{% url 'public_views:public-availability' %}">Check Availability</a></li>
+                <li><a href="{% url 'booking:booking-list' %}">View All Bookings</a></li>
             </ul>
         </div>
-        <h3 class="text-lg mb-2">Recent Bookings</h3>
-        {% if bookings %}
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr>
-                            <th>Classroom</th>
-                            <th>Date</th>
-                            <th>Start Time</th>
-                            <th>End Time</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for booking in bookings %}
-                            <tr>
-                                <td>{{ booking.classroom.name }}</td>
-                                <td>{{ booking.date }}</td>
-                                <td>{{ booking.start_time|time:"H:i" }}</td>
-                                <td>{{ booking.end_time|time:"H:i" }}</td>
-                                <td>
-                                    <span class="px-2 py-1 rounded
-                                        {% if booking.status == 'approved' %}bg-green-100 text-green-800
-                                        {% elif booking.status == 'pending' %}bg-yellow-100 text-yellow-800
-                                        {% else %}bg-red-100 text-red-800{% endif %}">
-                                        {{ booking.get_status_display }}
-                                    </span>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p>No recent bookings.</p>
-        {% endif %}
     </div>
-</main>
+</div>
 {% endblock %}
-
