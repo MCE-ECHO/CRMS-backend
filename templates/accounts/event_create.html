@@ -1,20 +1,15 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+
 {% block title %}Create Event{% endblock %}
+
 {% block content %}
-<div class="hero">
-    <h1>Create Event</h1>
-    <p>Schedule a new event.</p>
-</div>
-<div class="card max-w-md mx-auto">
-    <h2>Event Form</h2>
-    <form method="post" action="{% url 'accounts:event-create' %}" class="space-y-4">
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">Create Event</h1>
+    <form method="post" class="max-w-lg">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit" class="btn btn-primary w-full">Create Event</button>
+        <button type="submit" class="btn btn-primary">Create Event</button>
+        <a href="{% url 'accounts:teacher-dashboard' %}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
 {% endblock %}
-{% block extra_js %}
-    <script src="{% static 'js/timetable.js' %}"></script>
-{% endblock %}
-
