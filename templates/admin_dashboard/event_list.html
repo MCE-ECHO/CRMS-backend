@@ -1,44 +1,31 @@
-{% extends "base.html" %}
-{% load static %}
+{% extends 'base.html' %}
+
+{% block title %}Event List{% endblock %}
 
 {% block content %}
-<main class="p-6 max-w-5xl mx-auto">
-    <h1 class="text-2xl font-bold mb-6">Event List</h1>
-    <div class="bg-white shadow-lg rounded-lg p-6">
-        <h2 class="text-xl mb-4">All Events</h2>
-        {% if events %}
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr>
-                            <th class="px-2 py-1">Title</th>
-                            <th class="px-2 py-1">Description</th>
-                            <th class="px-2 py-1">Start Date</th>
-                            <th class="px-2 py-1">End Date</th>
-                            <th class="px-2 py-1">Created By</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for event in events %}
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-2 py-1">{{ event.title }}</td>
-                                <td class="px-2 py-1">{{ event.description|truncatechars:50 }}</td>
-                                <td class="px-2 py-1">{{ event.start_date|date:"Y-m-d H:i" }}</td>
-                                <td class="px-2 py-1">{{ event.end_date|date:"Y-m-d H:i" }}</td>
-                                <td class="px-2 py-1">{{ event.created_by.username }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p>No events found.</p>
-        {% endif %}
-        <div class="flex flex-wrap gap-2 mt-4">
-            <a href="{% url 'admin_dashboard:event-create' %}" class="btn btn-secondary">Create New Event</a>
-            <a href="{% url 'admin_dashboard:admin-dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
-        </div>
-    </div>
-</main>
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">Event List</h1>
+    <table class="w-full">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in events %}
+            <tr>
+                <td>{{ event.title }}</td>
+                <td>{{ event.start_date }}</td>
+                <td>{{ event.end_date }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="text-center">No events found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}
-
