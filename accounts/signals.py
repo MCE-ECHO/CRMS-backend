@@ -17,3 +17,4 @@ def save_user_profile(sender, instance, **kwargs):
         instance.teacherprofile.save()
     elif hasattr(instance, 'studentprofile'):
         instance.studentprofile.save()
+
