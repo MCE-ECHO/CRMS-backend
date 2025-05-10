@@ -1,95 +1,164 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Sidebar Toggle
-    const sidebar = document.querySelector('.sidebar');
-    const toggle = document.querySelector('.sidebar-toggle');
-    if (toggle && sidebar) {
-        toggle.addEventListener('click', () => {
-            sidebar.classList.toggle('hidden');
-            sidebar.classList.toggle('active');
+    // Drag and Drop Timetable Upload
+    const dropzone = document.querySelector('.dropzone');
+    const fileInput = document.querySelector('#fileInput');
+    const filePreview = document.getElementById('filePreview');
+    const uploadForm = document.getElementById('uploadForm');
+
+    if (dropzone && fileInput && filePreview) {
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('dragover');
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length) {
+                fileInput.files = files;
+                filePreview.textContent = `Selected: ${files[0].name}`;
+                filePreview.classList.remove('hidden');
+            }
+        });
+
+        dropzone.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) {
+                filePreview.textContent = `Selected: ${fileInput.files[0].name}`;
+                filePreview.classList.remove('hidden');
+            }
         });
     }
 
-    // Messages
-    const messages = document.querySelectorAll('.messages .message');
-    messages.forEach(message => {
-        const type = message.classList.contains('success') ? 'success' :
-                     message.classList.contains('error') ? 'error' : 'info';
-        Swal.fire({
-            icon: type,
-            title: type.charAt(0).toUpperCase() + type.slice(1),
-            text: message.textContent,
-            confirmButtonColor: '#0071E3'
-        });
-    });
-
-    // Form Validation
-    const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
-        form.addEventListener('submit', function (e) {
-            const inputs = form.querySelectorAll('input[required], select[required]');
-            let valid = true;
-            inputs.forEach(input => {
-                if (!input.value) {
-                    valid = false;
-                    input.classList.add('border-red-500');
-                } else {
-                    input.classList.remove('border-red-500');
-                }
-            });
-            if (!valid) {
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', function (e) {
+            if (!fileInput.files.length) {
                 e.preventDefault();
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Missing Fields',
-                    text: 'Please fill in all required fields.',
-                    confirmButtonColor: '#0071E3'
-                });
+                Swal.fire('Warning', 'Please select a file to upload.', 'warning');
+                return;
             }
         });
-    });
+    }
 
-    // Auto-submit Block Filter
-    const blockFilters = document.querySelectorAll('select[name="block"]');
-    blockFilters.forEach(filter => {
-        filter.addEventListener('change', function () {
-            this.form.submit();
-        });
-    });
+    // Timetable Table (Admin)
+    const timetableTable = document.getElementById('timetableTable');
+    if (timetableTable) {
+        fetch('/timetable/api/all/')
+            .then(res => res.json())
+            .then(data => {
+                const tbody = timetableTable.querySelector('tbody');
+                tbody.innerHTML = data.map(row => `
+                    <tr>
+                        <td>${row.day}</td>
+                        <td>${row.start_time}</td>
+                        <td>${row.end_time}</td>
+                        <td>${row.classroom}</td>
+                        <td>${row.teacher}</td>
+                        <td>
+                            <button onclick="editTimetable(${row.id})" class="btn btn-primary btn-sm">Edit</button>
+                            <button onclick="deleteTimetable(${row.id})" class="btn btn-danger btn-sm">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+                timetableTable.style.display = 'table';
+                document.getElementById('timetableLoading')?.style.display = 'none';
+            })
+            .catch(error => handleError(error, 'timetableTable', 'Failed to load timetable.'));
+    }
 
-    // Date and Time Input Validation
-    const dateInputs = document.querySelectorAll('input[type="date"]');
-    const timeInputs = document.querySelectorAll('input[type="time"]');
-    dateInputs.forEach(input => {
-        input.addEventListener('change', function () {
-            const today = new Date().toISOString().split('T')[0];
-            if (this.value < today) {
-                this.value = today;
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Invalid Date',
-                    text: 'Cannot select a past date.',
-                    confirmButtonColor: '#0071E3'
-                });
-            }
-        });
-    });
-    timeInputs.forEach(input => {
-        input.addEventListener('change', function () {
-            const form = this.form;
-            const startTime = form.querySelector('input[name="start_time"]');
-            const endTime = form.querySelector('input[name="end_time"]');
-            if (startTime && endTime && startTime.value && endTime.value) {
-                if (startTime.value >= endTime.value) {
-                    endTime.value = '';
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Invalid Time',
-                        text: 'End time must be after start time.',
-                        confirmButtonColor: '#0071E3'
-                    });
-                }
-            }
-        });
-    });
+    // Booking Table (Admin)
+    const bookingTable = document.getElementById('bookingTable');
+    if (bookingTable) {
+        fetch('/booking/admin/list/')
+            .then(res => res.json())
+            .then(data => {
+                const tbody = bookingTable.querySelector('tbody');
+                tbody.innerHTML = data.map(row => `
+                    <tr>
+                        <td>${row.user}</td>
+                        <td>${row.classroom}</td>
+                        <td>${row.date}</td>
+                        <td>${row.start_time} - ${row.end_time}</td>
+                        <td>${row.status}</td>
+                        <td>
+                            <button onclick="approveBooking(${row.id})" class="btn btn-primary btn-sm">Approve</button>
+                            <button onclick="rejectBooking(${row.id})" class="btn btn-danger btn-sm">Reject</button>
+                        </td>
+                    </tr>
+                `).join('');
+                bookingTable.style.display = 'table';
+                document.getElementById('bookingLoading')?.style.display = 'none';
+            })
+            .catch(error => handleError(error, 'bookingTable', 'Failed to load bookings.'));
+    }
 });
+
+// Admin Timetable Actions (implement modal/edit logic as needed)
+function editTimetable(id) {
+    Swal.fire('Info', 'Edit timetable functionality to be implemented.', 'info');
+}
+
+function deleteTimetable(id) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'This will delete the timetable entry.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#0071E3',
+        cancelButtonColor: '#E82127'
+    }).then(result => {
+        if (result.isConfirmed) {
+            fetch(`/timetable/api/delete/${id}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+                .then(res => {
+                    if (res.ok) {
+                        Swal.fire('Success', 'Timetable entry deleted.', 'success');
+                        document.getElementById('timetableTable').querySelector('tbody').innerHTML = '';
+                        document.getElementById('timetableTable').dispatchEvent(new Event('load'));
+                    } else {
+                        throw new Error('Failed to delete.');
+                    }
+                })
+                .catch(err => handleError(err, 'timetableTable', 'Failed to delete timetable entry.'));
+        }
+    });
+}
+
+function approveBooking(id) {
+    fetch(`/booking/admin/approve/${id}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+        .then(res => res.json())
+        .then(data => Swal.fire('Success', data.message, 'success'))
+        .catch(err => handleError(err, 'bookingTable', 'Failed to approve booking.'));
+}
+
+function rejectBooking(id) {
+    fetch(`/booking/admin/reject/${id}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+        .then(res => res.json())
+        .then(data => Swal.fire('Success', data.message, 'success'))
+        .catch(err => handleError(err, 'bookingTable', 'Failed to reject booking.'));
+}
+
+function exportCSV() {
+    window.location.href = '/timetable/api/export/';
+}
 
