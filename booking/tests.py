@@ -18,4 +18,5 @@ class BookingModelTests(TestCase):
             end_time='11:00',
             status='pending'
         )
-        self.assertEqual(str(booking), 'CSE101 - 2025-05-05 10:00:00-11:00:00')
+        self.assertEqual(str(booking), 'testuser - CSE101 on 2025-05-05')
+
