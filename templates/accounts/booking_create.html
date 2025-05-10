@@ -1,35 +1,13 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% block title %}Create Booking{% endblock %}
-{% block extra_js %}
-    <script src="{% static 'js/teacher_dashboard.js' %}"></script>
-    <script src="{% static 'js/timetable.js' %}"></script>
-{% endblock %}
 {% block content %}
-<div class="hero">
-    <h1>Create Booking</h1>
-    <p>Book a classroom for your session.</p>
-</div>
-<div class="card max-w-md mx-auto">
-    <h2>Booking Form</h2>
-    <form id="bookingForm" action="{% url 'accounts:booking-create' %}" method="post" class="space-y-4">
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">Create Booking</h1>
+    <form method="post" class="max-w-lg">
         {% csrf_token %}
-        <div>
-            <label for="classroom" class="block">Classroom</label>
-            <select id="classroom" name="classroom" required class="w-full"></select>
-        </div>
-        <div>
-            <label for="date" class="block">Date</label>
-            <input type="date" id="date" name="date" required class="w-full">
-        </div>
-        <div>
-            <label for="start_time" class="block">Start Time</label>
-            <input type="time" id="start_time" name="start_time" required class="w-full">
-        </div>
-        <div>
-            <label for="end_time" class="block">End Time</label>
-            <input type="time" id="end_time" name="end_time" required class="w-full">
-        </div>
-        <button type="submit" class="btn btn-primary w-full">Submit</button>
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Submit Booking</button>
+        <a href="{% url 'booking:booking-list' %}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
 {% endblock %}
