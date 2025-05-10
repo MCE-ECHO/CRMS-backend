@@ -1,35 +1,43 @@
-function handleError(error, elementId, message) {
-    console.error(error);
-    const element = document.getElementById(elementId);
-    if (element) {
-        element.innerHTML = `<p class="text-red-500">${message}</p>`;
+// Utility Functions for API and UI
+
+function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return date.toISOString().split('T')[0];
+}
+
+function formatTime(timeStr) {
+    const [hours, minutes] = timeStr.split(':');
+    const date = new Date();
+    date.setHours(hours, minutes);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function getCsrfToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+
+function makeApiRequest(url, method = 'GET', body = null) {
+    const headers = {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCsrfToken()
+    };
+    const options = { method, headers };
+    if (body) {
+        options.body = JSON.stringify(body);
     }
-    Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: message,
-        confirmButtonColor: '#0071E3'
-    });
+    return fetch(url, options)
+        .then(res => {
+            if (!res.ok) throw new Error(`API request failed: ${res.statusText}`);
+            return res.json();
+        });
 }
 
-function ajaxGet(url, callback) {
-    fetch(url, {
-        method: 'GET',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-        .then(response => response.json())
-        .then(data => callback(null, data))
-        .catch(error => callback(error, null));
-}
-
-function serializeForm(form) {
-    const formData = new FormData(form);
-    const data = {};
-    formData.forEach((value, key) => {
-        data[key] = value;
-    });
-    return data;
+// Debounce Utility for Input Events
+function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
 }
 
