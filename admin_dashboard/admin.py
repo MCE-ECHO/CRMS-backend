@@ -32,10 +32,11 @@ class ClassroomAdmin(admin.ModelAdmin):
 
     def status_badge(self, obj):
         color = 'green' if obj.status == 'free' else 'red' if obj.status == 'occupied' else 'orange'
-        display_text = obj.get_status_display()  # Uses choices' human-readable name
+        display_text = obj.get_status_display()
         return format_html(
             '<span style="color: white; background-color: {}; padding: 2px 8px; border-radius: 4px;">{}</span>',
             color,
             display_text
         )
     status_badge.short_description = 'Status'
+
