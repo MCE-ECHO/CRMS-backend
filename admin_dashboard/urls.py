@@ -1,40 +1,31 @@
 from django.urls import path
-from .views import (
-    admin_dashboard_view, event_create_view, event_list_view, UsageStatsView, PeakHoursView, ActiveFacultyView,
-    TimetableUploadView, all_timetables, add_timetable, update_timetable, delete_timetable,
-    available_classrooms, classroom_list, teacher_list, export_timetable_csv, BookingListView,
-    approve_booking, reject_booking, timetable_management, booking_management, event_management, upload_timetable
-)
+from . import views
 
 app_name = 'admin_dashboard'
 
 urlpatterns = [
-    path('', admin_dashboard_view, name='admin-dashboard'),
-    path('event/create/', event_create_view, name='event-create'),
-    path('event/list/', event_list_view, name='event-list'),
-    path('event-management/', event_management, name='event-management'),
+    path('', views.admin_dashboard_view, name='admin-dashboard'),
+    path('upload-timetable/', views.upload_timetable, name='upload-timetable'),
+    path('timetable/', views.timetable_management, name='timetable-management'),
+    path('bookings/', views.booking_management, name='booking-management'),
+    path('events/', views.event_management, name='event-management'),
+    path('events/create/', views.event_create_view, name='event-create'),
+    path('events/list/', views.event_list_view, name='event-list'),
 
-    path('upload/', TimetableUploadView.as_view(), name='timetable-upload'),
-    path('upload-timetable/', upload_timetable, name='upload-timetable'),
-    path('timetables/', all_timetables, name='all-timetables'),
-    path('timetable/add/', add_timetable, name='add-timetable'),
-    path('timetable/update/<int:pk>/', update_timetable, name='update-timetable'),
-    path('timetable/delete/<int:pk>/', delete_timetable, name='delete-timetable'),
-
-    path('usage/', UsageStatsView.as_view(), name='usage-stats'),
-    path('peak-hours/', PeakHoursView.as_view(), name='peak-hours'),
-    path('active-faculty/', ActiveFacultyView.as_view(), name='active-faculty'),
-
-    path('available-classrooms/', available_classrooms, name='available-classrooms'),
-    path('classrooms/', classroom_list, name='classroom-list'),
-    path('teachers/', teacher_list, name='teacher-list'),
-
-    path('bookings/', BookingListView.as_view(), name='booking-list'),
-    path('booking/approve/<int:pk>/', approve_booking, name='approve-booking'),
-    path('booking/reject/<int:pk>/', reject_booking, name='reject-booking'),
-    path('booking-management/', booking_management, name='booking-management'),
-
-    path('timetable-management/', timetable_management, name='timetable-management'),
-    path('export/csv/', export_timetable_csv, name='export-timetable-csv'),
+    # API endpoints
+    path('api/timetables/', views.all_timetables, name='api-timetables'),
+    path('api/timetables/add/', views.add_timetable, name='api-add-timetable'),
+    path('api/timetables/update/<int:pk>/', views.update_timetable, name='api-update-timetable'),
+    path('api/timetables/delete/<int:pk>/', views.delete_timetable, name='api-delete-timetable'),
+    path('api/bookings/', views.BookingListView.as_view(), name='api-bookings'),
+    path('api/bookings/approve/<int:pk>/', views.approve_booking, name='approve-booking'),
+    path('api/bookings/reject/<int:pk>/', views.reject_booking, name='reject-booking'),
+    path('api/availability/', views.available_classrooms, name='available-classrooms'),
+    path('api/classrooms/', views.classroom_list, name='classroom-list'),
+    path('api/teachers/', views.teacher_list, name='teacher-list'),
+    path('api/export-csv/', views.export_timetable_csv, name='export-timetable-csv'),
+    path('api/stats/usage/', views.UsageStatsView.as_view(), name='usage-stats'),
+    path('api/stats/peakhours/', views.PeakHoursView.as_view(), name='peak-hours'),
+    path('api/stats/faculty/', views.ActiveFacultyView.as_view(), name='active-faculty'),
 ]
 
