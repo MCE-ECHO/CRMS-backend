@@ -2,7 +2,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-load_dotenv()  # Loads variables from a .env file
+load_dotenv()  # Load environment variables
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -10,7 +10,6 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-your-secret-key')
 
 DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-# Robust ALLOWED_HOSTS parsing
 hosts = os.getenv('DJANGO_ALLOWED_HOSTS', '*')
 ALLOWED_HOSTS = [h.strip() for h in hosts.split(',') if h.strip()]
 
@@ -23,6 +22,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    # Project apps
     'accounts',
     'classroom',
     'timetable',
@@ -101,7 +101,7 @@ REST_FRAMEWORK = {
 CORS_ORIGIN_ALLOW_ALL = DEBUG
 CORS_ALLOW_CREDENTIALS = True
 
-# Uncomment and use in production:
+# Uncomment for production:
 # CORS_ALLOWED_ORIGINS = [origin.strip() for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if origin.strip()]
 
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "http://localhost,http://127.0.0.1").split(",") if origin.strip()]
