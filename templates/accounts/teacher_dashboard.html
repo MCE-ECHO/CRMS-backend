@@ -1,134 +1,128 @@
-{% extends "base.html" %}
-{% load static %}
+{% extends 'base.html' %}
+
+{% block title %}Teacher Dashboard{% endblock %}
 
 {% block content %}
-<main class="p-6 max-w-5xl mx-auto">
+<div class="container mx-auto p-6">
     <h1 class="text-3xl font-bold mb-6">Teacher Dashboard</h1>
-    <div class="grid md:grid-cols-2 gap-6">
-        <!-- Book a Classroom -->
-        <div class="bg-white p-6 shadow rounded-lg">
-            <h2 class="text-xl font-semibold mb-4">Book a Classroom</h2>
-            <form id="bookingForm" method="post" class="space-y-4">
-                {% csrf_token %}
-                <div>
-                    <label for="classroom" class="block font-semibold">Classroom</label>
-                    <select name="classroom" id="classroom" required class="w-full p-3 border rounded-lg">
-                        <option value="">Select a classroom</option>
-                        {% for classroom in classrooms %}
-                            <option value="{{ classroom.id }}">{{ classroom.name }} ({{ classroom.block.name }})</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div>
-                    <label for="date" class="block font-semibold">Date</label>
-                    <input type="date" name="date" id="date" required class="w-full p-3 border rounded-lg">
-                </div>
-                <div>
-                    <label for="start_time" class="block font-semibold">Start Time</label>
-                    <input type="time" name="start_time" id="start_time" required class="w-full p-3 border rounded-lg">
-                </div>
-                <div>
-                    <label for="end_time" class="block font-semibold">End Time</label>
-                    <input type="time" name="end_time" id="end_time" required class="w-full p-3 border rounded-lg">
-                </div>
-                <button type="submit" class="btn btn-primary w-full transition-all duration-150 hover:bg-blue-700">Submit Booking</button>
-            </form>
-        </div>
 
-        <!-- Upcoming Timetable -->
-        <div class="bg-white p-6 shadow rounded-lg">
-            <h2 class="text-xl font-semibold mb-4">Your Timetable</h2>
-            {% if timetable %}
-                <ul>
-                    {% for slot in timetable %}
-                        <li class="mb-2">
-                            <span class="font-semibold">{{ slot.day }}</span>,
-                            <span>{{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i" }}</span>
-                            <span class="text-gray-500">({{ slot.classroom.name }})</span>
-                            {% if slot.subject_name %} - <span>{{ slot.subject_name }}</span>{% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>No timetable entries found.</p>
-            {% endif %}
-        </div>
+    <!-- Profile Overview -->
+    <div class="card mb-6">
+        <h3>Welcome, {{ profile.user.get_full_name|default:profile.user.username }}</h3>
+        <p><strong>Department:</strong> {{ profile.department }}</p>
+        <p><strong>Phone:</strong> {{ profile.phone|default:"Not provided" }}</p>
     </div>
 
-    <div class="grid md:grid-cols-2 gap-6 mt-6">
-        <!-- Recent Bookings -->
-        <div class="bg-white p-6 shadow rounded-lg">
-            <h2 class="text-xl font-semibold mb-4">Your Recent Bookings</h2>
-            {% if bookings %}
-                <ul>
-                    {% for booking in bookings %}
-                        <li class="mb-2">
-                            <span class="font-semibold">{{ booking.classroom.name }}</span>
-                            on <span>{{ booking.date }}</span>
-                            <span>{{ booking.start_time|time:"H:i" }}-{{ booking.end_time|time:"H:i" }}</span>
-                            <span class="badge 
-                                {% if booking.status == 'approved' %}bg-green-200 text-green-800
-                                {% elif booking.status == 'pending' %}bg-yellow-200 text-yellow-800
-                                {% else %}bg-red-200 text-red-800{% endif %}">
-                                {{ booking.get_status_display }}
-                            </span>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>No bookings yet.</p>
-            {% endif %}
-        </div>
-
-        <!-- Upcoming Events -->
-        <div class="bg-white p-6 shadow rounded-lg">
-            <h2 class="text-xl font-semibold mb-4">Upcoming Events</h2>
-            {% if events %}
-                <ul>
-                    {% for event in events %}
-                        <li class="mb-2">
-                            <span class="font-semibold">{{ event.title }}</span>
-                            <span class="text-gray-500">({{ event.start_date|date:"M d, H:i" }})</span>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>No upcoming events.</p>
-            {% endif %}
-        </div>
+    <!-- Timetable -->
+    <div class="card mb-6">
+        <h3>My Timetable</h3>
+        <table class="w-full">
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Time</th>
+                    <th>Classroom</th>
+                    <th>Subject</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in timetable %}
+                <tr>
+                    <td>{{ entry.day }}</td>
+                    <td>{{ entry.start_time }} - {{ entry.end_time }}</td>
+                    <td>{{ entry.classroom.name }}</td>
+                    <td>{{ entry.subject_name|default:"N/A" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center">No timetable entries found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-</main>
-{% endblock %}
 
-{% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const bookingForm = document.getElementById('bookingForm');
-    bookingForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(bookingForm);
-        fetch("{% url 'accounts:booking-create' %}", {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            }
-        })
-        .then(response => response.text())
-        .then(html => {
-            if (html.includes('Booking request submitted')) {
-                Swal.fire('Success!', 'Booking submitted.', 'success');
-                bookingForm.reset();
-            } else {
-                Swal.fire('Error', 'Failed to submit booking.', 'error');
-            }
-        })
-        .catch(() => {
-            Swal.fire('Error', 'Failed to submit booking.', 'error');
-        });
-    });
-});
-</script>
-{% endblock %}
+    <!-- Bookings -->
+    <div class="card mb-6">
+        <h3>My Bookings</h3>
+        <table class="w-full">
+            <thead>
+                <tr>
+                    <th>Classroom</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td>{{ booking.classroom.name }}</td>
+                    <td>{{ booking.date }}</td>
+                    <td>{{ booking.start_time }} - {{ booking.end_time }}</td>
+                    <td>{{ booking.status }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center">No bookings found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{% url 'accounts:booking-create' %}" class="btn btn-primary mt-4">Create Booking</a>
+    </div>
 
+    <!-- Classrooms -->
+    <div class="card mb-6">
+        <h3>Classrooms</h3>
+        <table class="w-full">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Block</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for classroom in classrooms %}
+                <tr>
+                    <td>{{ classroom.name }}</td>
+                    <td>{{ classroom.block.name }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="2" class="text-center">No classrooms found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Events -->
+    <div class="card">
+        <h3>Upcoming Events</h3>
+        <table class="w-full">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in events %}
+                <tr>
+                    <td>{{ event.title }}</td>
+                    <td>{{ event.start_date }}</td>
+                    <td>{{ event.end_date }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center">No upcoming events.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{% url 'accounts:event-list' %}" class="btn btn-primary mt-4">View All Events</a>
+    </div>
+</div>
+{% endblock %}
