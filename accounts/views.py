@@ -7,8 +7,7 @@ from .utils import is_teacher, is_admin
 from timetable.models import Timetable
 from classroom.models import Classroom
 from booking.models import Booking
-from .forms import ProfileForm, StudentProfileForm, EventForm  # You should have these forms defined
-from datetime import datetime
+from .forms import ProfileForm, StudentProfileForm, EventForm
 
 def login_view(request):
     """
@@ -25,20 +24,18 @@ def login_view(request):
         else:
             messages.error(request, 'Invalid username or password.')
             return render(request, 'accounts/login.html', {'username': username})
-    # Support ?next=... in GET
     return render(request, 'accounts/login.html', {'next': request.GET.get('next', '')})
 
 @login_required
 def profile_view(request):
     """
     Profile view for both teachers and students.
-    Teachers: editing can be disabled if required.
-    Students: can edit their profile.
+    Teachers: view-only by default; Students: editable.
     """
     if is_teacher(request.user):
         profile = request.user.teacherprofile
         form_class = ProfileForm
-        can_edit = False  # Set True if you want teachers to edit their profile
+        can_edit = False
     else:
         profile = request.user.studentprofile
         form_class = StudentProfileForm
@@ -61,15 +58,16 @@ def profile_view(request):
 
 @login_required
 @user_passes_test(is_teacher)
-def teacher_dashboard_view(request):
+def teacher_dashboard(request):
     """
     Dashboard for teachers: show timetable, bookings, classrooms, and events.
     """
     profile = request.user.teacherprofile
     timetable = Timetable.objects.filter(teacher=request.user).select_related('classroom')
-    bookings = Booking.objects.filter(user=request.user).select_related('classroom')
-    classrooms = Classroom.objects.all().select_related('block')
+    bookings = Booking.objects.filter(teacher=request.user).select_related('classroom')
+    classrooms = Classroom.objects.all()
     events = Event.objects.filter(visibility__in=['public', 'teacher']).order_by('start_date')[:5]
+
     return render(request, 'accounts/teacher_dashboard.html', {
         'profile': profile,
         'timetable': timetable,
@@ -85,26 +83,35 @@ def booking_create_view(request):
     Create a booking for a classroom (teachers only).
     """
     if request.method == 'POST':
-        try:
-            classroom_id = request.POST.get('classroom')
-            date = request.POST.get('date')
-            start_time = request.POST.get('start_time')
-            end_time = request.POST.get('end_time')
+        classroom_id = request.POST.get('classroom')
+        date = request.POST.get('date')
+        start_time = request.POST.get('start_time')
+        end_time = request.POST.get('end_time')
 
+        try:
             classroom = Classroom.objects.get(id=classroom_id)
-            booking = Booking(
-                user=request.user,
+            # Check for overlapping bookings
+            overlap = Booking.objects.filter(
                 classroom=classroom,
                 date=date,
-                start_time=start_time,
-                end_time=end_time,
-                status='pending'
-            )
-            booking.clean()
-            booking.save()
-            messages.success(request, 'Booking request submitted.')
-        except Exception as e:
-            messages.error(request, f'Error creating booking: {str(e)}')
+                start_time__lt=end_time,
+                end_time__gt=start_time,
+                status__in=['pending', 'approved']
+            ).exists()
+            if overlap:
+                messages.error(request, 'This classroom is already booked for the selected time.')
+            else:
+                Booking.objects.create(
+                    teacher=request.user,
+                    classroom=classroom,
+                    date=date,
+                    start_time=start_time,
+                    end_time=end_time,
+                    status='pending'
+                )
+                messages.success(request, 'Booking request submitted.')
+        except Classroom.DoesNotExist:
+            messages.error(request, 'Invalid classroom selected.')
         return redirect('accounts:teacher-dashboard')
     return redirect('accounts:teacher-dashboard')
 
