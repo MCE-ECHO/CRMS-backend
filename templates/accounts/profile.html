@@ -1,59 +1,32 @@
-{% extends "base.html" %}
-{% load static %}
+{% extends 'base.html' %}
+
+{% block title %}Profile{% endblock %}
 
 {% block content %}
-<main class="p-6 max-w-3xl mx-auto">
-    <h1 class="text-2xl font-bold mb-6">Your Profile</h1>
-    <div class="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center sm:flex-row sm:items-start gap-6">
-        <div class="flex flex-col items-center">
-            {% if form.instance.avatar %}
-                <img src="{{ form.instance.avatar.url }}"
-                     class="w-28 h-28 rounded-full mb-2 object-cover border-4 border-blue-200 shadow-md transition-transform duration-300 hover:scale-105"
-                     alt="Avatar">
-            {% else %}
-                <img src="{% static 'img/default-avatar.png' %}"
-                     class="w-28 h-28 rounded-full mb-2 object-cover border-4 border-blue-200 shadow-md"
-                     alt="Default Avatar">
-            {% endif %}
-            <div class="text-center mt-2">
-                <div class="font-semibold text-lg">{{ profile.user.get_full_name|default:profile.user.username }}</div>
-                <div class="text-gray-500 text-sm">{{ profile.user.email }}</div>
-                <div class="text-xs text-blue-600 mt-1">
-                    {% if profile|hasattr:'roll_number' %}Student{% else %}Teacher{% endif %}
-                </div>
-            </div>
-        </div>
-        <div class="flex-1 w-full">
-            <form method="post" enctype="multipart/form-data" class="space-y-4" {% if not can_edit %}onsubmit="return false;"{% endif %}>
-                {% csrf_token %}
-                {% for field in form %}
-                    <div>
-                        <label class="block font-medium mb-1" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.help_text %}
-                            <small class="text-gray-400">{{ field.help_text }}</small>
-                        {% endif %}
-                        {% for error in field.errors %}
-                            <div class="text-red-500 text-xs">{{ error }}</div>
-                        {% endfor %}
-                    </div>
-                {% endfor %}
-                {% if can_edit %}
-                    <button type="submit"
-                            class="btn btn-primary w-full transition-all duration-200 hover:bg-blue-700 animate-pulse">
-                        Save Changes
-                    </button>
-                {% endif %}
-            </form>
-            {% if messages %}
-                <div class="mt-4">
-                    {% for message in messages %}
-                        <p class="{% if message.tags == 'error' %}text-red-500{% else %}text-green-500{% endif %}">{{ message }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        </div>
-    </div>
-</main>
-{% endblock %}
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">Profile</h1>
+    <div class="card max-w-lg">
+        {% if profile.avatar %}
+        <img src="{{ profile.avatar.url }}" alt="Profile Picture" class="w-32 h-32 rounded-full mx-auto mb-4">
+        {% endif %}
+        <h3>{{ profile.user.get_full_name|default:profile.user.username }}</h3>
+        {% if user.is_staff %}
+        <p><strong>Department:</strong> {{ profile.department }}</p>
+        {% else %}
+        <p><strong>Roll Number:</strong> {{ profile.roll_number }}</p>
+        {% endif %}
+        <p><strong>Phone:</strong> {{ profile.phone|default:"Not provided" }}</p>
+        {% if user.is_staff %}
+        <p><strong>Bio:</strong> {{ profile.bio|default:"Not provided" }}</p>
+        {% endif %}
 
+        {% if can_edit %}
+        <form method="post" enctype="multipart/form-data" class="mt-4">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Update Profile</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
