@@ -1,91 +1,89 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Filter Timetable
-    const dayFilter = document.getElementById('dayFilter');
-    if (dayFilter) {
-        dayFilter.addEventListener('change', function () {
-            const selectedDay = this.value;
-            const rows = document.querySelectorAll('.timetable-row');
-            rows.forEach(row => {
-                if (!selectedDay || row.dataset.day === selectedDay) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        });
-    }
-
-    // Fetch Teacher's Timetable
-    const timetableTable = document.getElementById('teacherTimetable');
+    // Timetable Filtering (e.g., on admin timetable management page)
+    const timetableTable = document.getElementById('timetableTable');
     if (timetableTable) {
+        const filterDay = document.createElement('select');
+        filterDay.innerHTML = `
+            <option value="">All Days</option>
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option>
+            <option value="Saturday">Saturday</option>
+            <option value="Sunday">Sunday</option>
+        `;
+        filterDay.classList.add('mb-4', 'p-2', 'border', 'rounded-lg');
+        timetableTable.parentElement.insertBefore(filterDay, timetableTable);
+
+        let timetableData = [];
         fetch('/timetable/api/all/')
             .then(res => res.json())
             .then(data => {
-                const tbody = timetableTable.querySelector('tbody');
-                tbody.innerHTML = data
-                    .filter(entry => entry.teacher === currentUser)
-                    .map(entry => `
-                        <tr class="timetable-row" data-day="${entry.day}">
-                            <td>${entry.classroom}</td>
-                            <td>${entry.day}</td>
-                            <td>${entry.start_time}</td>
-                            <td>${entry.end_time}</td>
-                            <td>${entry.subject_name || 'N/A'}</td>
-                        </tr>
-                    `).join('');
-                timetableTable.style.display = 'table';
+                timetableData = data;
+                renderTimetable(timetableData);
             })
-            .catch(error => handleError(error, 'teacherTimetable', 'Failed to load timetable.'));
-    }
+            .catch(error => handleError(error, 'timetableTable', 'Failed to load timetable.'));
 
-    // Fetch Teacher's Bookings
-    const bookingsTable = document.getElementById('teacherBookings');
-    if (bookingsTable) {
-        fetch('/booking/admin/list/')
-            .then(res => res.json())
-            .then(data => {
-                const tbody = bookingsTable.querySelector('tbody');
-                tbody.innerHTML = data
-                    .filter(booking => booking.user === currentUser)
-                    .map(booking => `
-                        <tr>
-                            <td>${booking.classroom}</td>
-                            <td>${booking.date}</td>
-                            <td>${booking.start_time}</td>
-                            <td>${booking.end_time}</td>
-                            <td>${booking.status}</td>
-                        </tr>
-                    `).join('');
-                bookingsTable.style.display = 'table';
-            })
-            .catch(error => handleError(error, 'teacherBookings', 'Failed to load bookings.'));
-    }
+        filterDay.addEventListener('change', function () {
+            const filteredData = this.value
+                ? timetableData.filter(entry => entry.day === this.value)
+                : timetableData;
+            renderTimetable(filteredData);
+        });
 
-    // Booking Form
-    const bookingForm = document.getElementById('bookingForm');
-    if (bookingForm) {
-        bookingForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            fetch(this.action, {
-                method: 'POST',
-                body: formData,
+        function renderTimetable(data) {
+            const tbody = timetableTable.querySelector('tbody');
+            tbody.innerHTML = data.map(row => `
+                <tr>
+                    <td>${row.day}</td>
+                    <td>${row.start_time}</td>
+                    <td>${row.end_time}</td>
+                    <td>${row.classroom}</td>
+                    <td>${row.teacher}</td>
+                    <td>
+                        <button onclick="editTimetable(${row.id})" class="btn btn-primary btn-sm">Edit</button>
+                        <button onclick="deleteTimetable(${row.id})" class="btn btn-danger btn-sm">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+            timetableTable.style.display = 'table';
+            document.getElementById('timetableLoading')?.style.display = 'none';
+        }
+    }
+});
+
+// Reusing editTimetable and deleteTimetable from dashboard.js if loaded
+function editTimetable(id) {
+    Swal.fire('Info', 'Edit timetable functionality to be implemented.', 'info');
+}
+
+function deleteTimetable(id) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'This will delete the timetable entry.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#0071E3',
+        cancelButtonColor: '#E82127'
+    }).then(result => {
+        if (result.isConfirmed) {
+            fetch(`/timetable/api/delete/${id}/`, {
+                method: 'DELETE',
                 headers: {
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                 }
             })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.message) {
-                        Swal.fire('Success', data.message, 'success');
-                        bookingForm.reset();
-                        bookingsTable.dispatchEvent(new Event('load'));
+                .then(res => {
+                    if (res.ok) {
+                        Swal.fire('Success', 'Timetable entry deleted.', 'success');
+                        window.location.reload(); // Refresh to update the table
                     } else {
-                        Swal.fire('Error', data.error || 'Failed to create booking.', 'error');
+                        throw new Error('Failed to delete.');
                     }
                 })
-                .catch(err => handleError(err, 'bookingForm', 'Failed to create booking.'));
-        });
-    }
-});
+                .catch(err => handleError(err, 'timetableTable', 'Failed to delete timetable entry.'));
+        }
+    });
+}
 
