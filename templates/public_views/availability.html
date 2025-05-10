@@ -1,40 +1,34 @@
-{% extends "base.html" %}
-{% load static %}
+{% extends 'base.html' %}
+
+{% block title %}Check Availability{% endblock %}
 
 {% block content %}
-<main class="p-6 max-w-2xl mx-auto">
-    <h1 class="text-2xl font-bold mb-6">Check Classroom Availability</h1>
-    <div class="bg-white shadow-lg rounded-lg p-6">
-        <h2 class="text-xl mb-4">Availability Filter</h2>
-        <form method="get" class="mb-4 space-y-4">
-            {{ form.as_p }}
-            <button type="submit" class="btn btn-primary w-full">Check Availability</button>
-        </form>
-        {% if classrooms %}
-            <h3 class="text-lg mb-2">Available Classrooms</h3>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Block</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for classroom in classrooms %}
-                            <tr>
-                                <td>{{ classroom.name }}</td>
-                                <td>{{ classroom.block.name }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% elif form.is_valid %}
-            <p>No classrooms available for the selected time and block.</p>
-        {% endif %}
-        <a href="{% url 'public_views:public-student-portal' %}" class="btn btn-secondary mt-4">Back to Portal</a>
-    </div>
-</main>
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">Check Classroom Availability</h1>
+    <form method="get" class="mb-6">
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Check Availability</button>
+    </form>
+    {% if classrooms %}
+    <h2 class="text-2xl font-bold mb-4">Available Classrooms</h2>
+    <table class="w-full">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Block</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for classroom in classrooms %}
+            <tr>
+                <td>{{ classroom.name }}</td>
+                <td>{{ classroom.block.name }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No classrooms available for the selected time slot.</p>
+    {% endif %}
+</div>
 {% endblock %}
-
