@@ -1,27 +1,27 @@
 {% load static %}
-<div class="sidebar hidden" id="sidebar">
-    <ul class="mt-16">
+<nav class="sidebar">
+    <ul class="mt-12">
+        <li><a href="{% url 'home' %}" class="{% if request.path == '/' %}active{% endif %}">🏠 Home</a></li>
         {% if user.is_authenticated %}
-            <li><a href="{% url 'accounts:profile' %}" class="{% if request.path == '/accounts/profile/' %}active{% endif %}">Profile</a></li>
             {% if user.is_superuser %}
-                <li><a href="{% url 'admin_dashboard:admin-dashboard' %}" class="{% if request.path == '/admin-dashboard/' %}active{% endif %}">Admin Dashboard</a></li>
+                <li><a href="{% url 'admin_dashboard:admin-dashboard' %}" class="{% if 'admin-dashboard' in request.path %}active{% endif %}">📊 Admin Dashboard</a></li>
             {% elif user.is_staff %}
-                <li><a href="{% url 'accounts:teacher-dashboard' %}" class="{% if request.path == '/accounts/teacher/dashboard/' %}active{% endif %}">Teacher Dashboard</a></li>
-                <li><a href="{% url 'accounts:booking-create' %}" class="{% if request.path == '/accounts/booking/create/' %}active{% endif %}">Create Booking</a></li>
-                <li><a href="{% url 'accounts:event-create' %}" class="{% if request.path == '/accounts/events/create/' %}active{% endif %}">Create Event</a></li>
+                <li><a href="{% url 'accounts:teacher-dashboard' %}" class="{% if 'teacher' in request.path %}active{% endif %}">👩‍🏫 Teacher Dashboard</a></li>
             {% else %}
-                <li><a href="{% url 'public_views:public-student-portal' %}" class="{% if request.path == '/public/portal/' %}active{% endif %}">Student Portal</a></li>
+                <li><a href="{% url 'public_views:public-student-portal' %}" class="{% if 'student-portal' in request.path %}active{% endif %}">🎓 Student Portal</a></li>
             {% endif %}
-            <li><a href="{% url 'accounts:event-list' %}" class="{% if request.path == '/accounts/events/' %}active{% endif %}">Events</a></li>
-            <li><a href="{% url 'logout' %}">Logout</a></li>
+            <li><a href="{% url 'accounts:profile' %}">👤 Profile</a></li>
+            <li>
+                <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-link" style="background:none; border:none; padding:0; color:inherit; font:inherit; cursor:pointer;">
+                        🚪 Logout
+                    </button>
+                </form>
+            </li>
         {% else %}
-            <li><a href="{% url 'login' %}" class="{% if request.path == '/login/' %}active{% endif %}">Login</a></li>
+            <li><a href="{% url 'login' %}">🔐 Login</a></li>
         {% endif %}
     </ul>
-</div>
-<button class="sidebar-toggle">
-    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M4 6h16M4 12h16M4 18h16"/>
-    </svg>
-</button>
-
+</nav>
+<button class="sidebar-toggle">☰</button>

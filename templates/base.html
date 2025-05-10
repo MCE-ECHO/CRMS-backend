@@ -1,56 +1,24 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Classroom Booking System{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Sidebar -->
-    <nav class="sidebar">
-        <ul class="mt-12">
-            <li><a href="{% url 'home' %}" class="{% if request.path == '/' %}active{% endif %}">🏠 Home</a></li>
-            {% if user.is_authenticated %}
-                {% if user.is_superuser %}
-                    <li><a href="{% url 'admin_dashboard:admin-dashboard' %}" class="{% if 'admin-dashboard' in request.path %}active{% endif %}">📊 Admin Dashboard</a></li>
-                {% elif user.is_staff %}
-                    <li><a href="{% url 'accounts:teacher-dashboard' %}" class="{% if 'teacher' in request.path %}active{% endif %}">👩‍🏫 Teacher Dashboard</a></li>
-                {% else %}
-                    <li><a href="{% url 'public_views:public-student-portal' %}" class="{% if 'student-portal' in request.path %}active{% endif %}">🎓 Student Portal</a></li>
-                {% endif %}
-                <li><a href="{% url 'accounts:profile' %}">👤 Profile</a></li>
-                <li><a href="{% url 'logout' %}">🚪 Logout</a></li>
-            {% else %}
-                <li><a href="{% url 'login' %}">🔐 Login</a></li>
-            {% endif %}
-        </ul>
-    </nav>
-    <button class="sidebar-toggle">☰</button>
-
-    <!-- Main Content -->
+    {% include "partials/navbar.html" %}
     <main>
-        <!-- Messages -->
         {% if messages %}
-        <div class="messages hidden">
+        <div class="messages">
             {% for message in messages %}
             <div class="message {{ message.tags }}">{{ message }}</div>
             {% endfor %}
         </div>
         {% endif %}
-
-        {% block content %}
-        <div class="hero">
-            <h1>Welcome to Classroom Booking System</h1>
-            <p>Book classrooms, manage timetables, and stay updated with events.</p>
-        </div>
-        {% endblock %}
+        {% block content %}{% endblock %}
     </main>
-
-    <script src="{% static 'js/global.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

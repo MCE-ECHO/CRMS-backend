@@ -64,7 +64,7 @@ def teacher_dashboard(request):
     """
     profile = request.user.teacherprofile
     timetable = Timetable.objects.filter(teacher=request.user).select_related('classroom')
-    bookings = Booking.objects.filter(teacher=request.user).select_related('classroom')
+    bookings = Booking.objects.filter(user=request.user).select_related('classroom')  # FIXED HERE
     classrooms = Classroom.objects.all()
     events = Event.objects.filter(visibility__in=['public', 'teacher']).order_by('start_date')[:5]
 
@@ -102,7 +102,7 @@ def booking_create_view(request):
                 messages.error(request, 'This classroom is already booked for the selected time.')
             else:
                 Booking.objects.create(
-                    teacher=request.user,
+                    user=request.user,  # FIXED HERE
                     classroom=classroom,
                     date=date,
                     start_time=start_time,
@@ -160,4 +160,3 @@ def home_redirect_view(request):
         else:
             return redirect('public_views:public-student-portal')
     return render(request, 'home.html')
-
