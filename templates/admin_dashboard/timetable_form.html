@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}Edit Timetable{% else %}Add Timetable{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">{% if form.instance.pk %}Edit Timetable{% else %}Add Timetable{% endif %}</h1>
+    <form method="post" class="max-w-lg">
+        {% csrf_token %}
+        <div class="mb-4">
+            <label for="id_day" class="block mb-2">Day</label>
+            <select name="day" id="id_day" class="w-full p-3 border rounded-lg" required>
+                {% for choice in form.day.field.choices %}
+                <option value="{{ choice.0 }}" {% if choice.0 == form.day.value %}selected{% endif %}>{{ choice.1 }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-4">
+            <label for="id_start_time" class="block mb-2">Start Time</label>
+            <input type="time" name="start_time" id="id_start_time" value="{{ form.start_time.value|default_if_none:'' }}" class="w-full p-3 border rounded-lg" required>
+        </div>
+        <div class="mb-4">
+            <label for="id_end_time" class="block mb-2">End Time</label>
+            <input type="time" name="end_time" id="id_end_time" value="{{ form.end_time.value|default_if_none:'' }}" class="w-full p-3 border rounded-lg" required>
+        </div>
+        <div class="mb-4">
+            <label for="id_classroom" class="block mb-2">Classroom</label>
+            <select name="classroom" id="id_classroom" class="w-full p-3 border rounded-lg" required>
+                {% for classroom in classrooms %}
+                <option value="{{ classroom.id }}" {% if classroom.id == form.classroom.value %}selected{% endif %}>{{ classroom.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-4">
+            <label for="id_teacher" class="block mb-2">Teacher</label>
+            <select name="teacher" id="id_teacher" class="w-full p-3 border rounded-lg" required>
+                {% for teacher in teachers %}
+                <option value="{{ teacher.id }}" {% if teacher.id == form.teacher.value %}selected{% endif %}>{{ teacher.username }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-4">
+            <label for="id_subject_name" class="block mb-2">Subject Name</label>
+            <input type="text" name="subject_name" id="id_subject_name" value="{{ form.subject_name.value|default_if_none:'' }}" class="w-full p-3 border rounded-lg">
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="{% url 'admin_dashboard:timetable-management' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}
