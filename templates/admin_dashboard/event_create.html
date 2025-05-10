@@ -1,35 +1,15 @@
-{% extends "base.html" %}
-{% load static %}
+{% extends 'base.html' %}
+
+{% block title %}Create Event{% endblock %}
 
 {% block content %}
-<main class="p-6 max-w-xl mx-auto">
-    <h1 class="text-2xl font-bold mb-6">Create Event</h1>
-    <div class="bg-white shadow-lg rounded-lg p-6">
-        <form method="post" class="space-y-4">
-            {% csrf_token %}
-            {% for field in form %}
-                <div>
-                    <label class="block font-semibold mb-1" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.help_text %}
-                        <small class="text-gray-400">{{ field.help_text }}</small>
-                    {% endif %}
-                    {% for error in field.errors %}
-                        <div class="text-red-500 text-xs">{{ error }}</div>
-                    {% endfor %}
-                </div>
-            {% endfor %}
-            <button type="submit" class="btn btn-primary w-full">Create Event</button>
-        </form>
-        {% if messages %}
-            <div class="mt-4">
-                {% for message in messages %}
-                    <p class="{% if message.tags == 'error' %}text-red-500{% else %}text-green-500{% endif %}">{{ message }}</p>
-                {% endfor %}
-            </div>
-        {% endif %}
-        <a href="{% url 'admin_dashboard:event-list' %}" class="btn btn-secondary mt-4">Back to Events</a>
-    </div>
-</main>
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">Create Event</h1>
+    <form method="post" class="max-w-lg">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Create Event</button>
+        <a href="{% url 'admin_dashboard:event-management' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
 {% endblock %}
-
