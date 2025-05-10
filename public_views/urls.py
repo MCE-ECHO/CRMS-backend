@@ -3,7 +3,7 @@ from .views import (
     student_portal_view,
     classroom_list_view,
     availability_view,
-    public_classroom_list
+    public_classroom_list,
 )
 
 app_name = 'public_views'
