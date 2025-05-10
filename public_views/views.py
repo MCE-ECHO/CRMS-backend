@@ -59,14 +59,12 @@ def availability_view(request):
         end_time = form.cleaned_data['end_time']
         block = form.cleaned_data['block']
 
-        # Timetable conflicts
         booked_ids = set(Timetable.objects.filter(
             day=date.strftime('%A'),
             start_time__lt=end_time,
             end_time__gt=start_time
         ).values_list('classroom_id', flat=True))
 
-        # Booking conflicts (approved only)
         booked_ids.update(Booking.objects.filter(
             date=date,
             start_time__lt=end_time,
