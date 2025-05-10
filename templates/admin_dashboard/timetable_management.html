@@ -1,23 +1,16 @@
-{% extends "base.html" %}
-{% load static %}
+{% extends 'base.html' %}
 
 {% block title %}Timetable Management{% endblock %}
 
-{% block extra_js %}
-    <script src="{% static 'js/dashboard.js' %}"></script>
-{% endblock %}
-
 {% block content %}
-<div class="hero">
-    <h1>Timetable Management</h1>
-    <p>View and manage classroom timetables.</p>
-</div>
-
-<div class="card">
-    <h2>Timetable</h2>
-    <button onclick="exportCSV()" class="btn btn-secondary mb-4">Export to CSV</button>
-    <div id="timetableLoading">Loading...</div>
-    <table id="timetableTable" style="display: none;">
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">Timetable Management</h1>
+    <div class="flex justify-between mb-4">
+        <a href="{% url 'admin_dashboard:add-timetable' %}" class="btn btn-primary">Add Timetable</a>
+        <button onclick="exportCSV()" class="btn btn-secondary">Export CSV</button>
+    </div>
+    <div id="timetableLoading" class="text-center">Loading timetable...</div>
+    <table id="timetableTable" class="w-full hidden">
         <thead>
             <tr>
                 <th>Day</th>
@@ -28,8 +21,29 @@
                 <th>Actions</th>
             </tr>
         </thead>
-        <tbody></tbody>
+        <tbody>
+            {% for timetable in timetables %}
+            <tr>
+                <td>{{ timetable.day }}</td>
+                <td>{{ timetable.start_time }}</td>
+                <td>{{ timetable.end_time }}</td>
+                <td>{{ timetable.classroom.name }}</td>
+                <td>{{ timetable.teacher.username }}</td>
+                <td>
+                    <a href="{% url 'admin_dashboard:update-timetable' timetable.id %}" class="btn btn-primary btn-sm">Edit</a>
+                    <a href="{% url 'admin_dashboard:delete-timetable' timetable.id %}" class="btn btn-danger btn-sm">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">No timetable entries found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
 </div>
 {% endblock %}
 
+{% block extra_js %}
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}
