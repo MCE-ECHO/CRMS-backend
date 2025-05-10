@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Management{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">Booking Management</h1>
+    <div id="bookingLoading" class="text-center">Loading bookings...</div>
+    <table id="bookingTable" class="w-full hidden">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Classroom</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+            <tr>
+                <td>{{ booking.user.username }}</td>
+                <td>{{ booking.classroom.name }}</td>
+                <td>{{ booking.date }}</td>
+                <td>{{ booking.start_time }} - {{ booking.end_time }}</td>
+                <td>{{ booking.status }}</td>
+                <td>
+                    <a href="{% url 'admin_dashboard:approve-booking' booking.id %}" class="btn btn-primary btn-sm">Approve</a>
+                    <a href="{% url 'admin_dashboard:reject-booking' booking.id %}" class="btn btn-danger btn-sm">Reject</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">No bookings found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}
