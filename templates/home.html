@@ -1,13 +1,13 @@
-{% extends "base.html" %}
-{% block title %}Welcome to CLASSROOMS{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
 {% block content %}
 <div class="hero">
-    <h1>Welcome to CLASSROOMS</h1>
-    <p>Manage your classroom schedules, bookings, and events with ease.</p>
-    <div class="mt-6 space-y-4 sm:space-y-0 sm:space-x-4">
-        <a href="{% url 'login' %}" class="btn btn-primary">Login</a>
-        <a href="{% url 'public_views:public-student-portal' %}" class="btn btn-secondary">Student Portal</a>
-    </div>
+    <h1>Welcome to Classroom Booking System</h1>
+    <p>Book classrooms, manage timetables, and stay updated with events.</p>
+    {% if not user.is_authenticated %}
+    <a href="{% url 'login' %}" class="btn btn-primary mt-4">Login to Get Started</a>
+    {% endif %}
 </div>
 {% endblock %}
-
