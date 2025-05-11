@@ -27,4 +27,5 @@ urlpatterns = [
     path('api/stats/usage/', views.UsageStatsView.as_view(), name='usage-stats'),
     path('api/stats/peakhours/', views.PeakHoursView.as_view(), name='peak-hours'),
     path('api/stats/faculty/', views.ActiveFacultyView.as_view(), name='active-faculty'),
+    path('api/classroom-status/', views.classroom_status, name='classroom-status'),  # New endpoint
 ]
