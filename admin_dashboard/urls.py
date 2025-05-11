@@ -11,8 +11,8 @@ urlpatterns = [
     path('events/', views.event_management, name='event-management'),
     path('events/create/', views.event_create_view, name='event-create'),
     path('events/list/', views.event_list_view, name='event-list'),
-
-    # API endpoints
+    path('empty-classrooms/', views.empty_classrooms_view, name='empty-classrooms'),
+    path('occupied-classrooms/', views.occupied_classrooms_view, name='occupied-classrooms'),
     path('api/timetables/', views.all_timetables, name='api-timetables'),
     path('api/timetables/add/', views.add_timetable, name='api-add-timetable'),
     path('api/timetables/update/<int:pk>/', views.update_timetable, name='api-update-timetable'),
@@ -28,4 +28,3 @@ urlpatterns = [
     path('api/stats/peakhours/', views.PeakHoursView.as_view(), name='peak-hours'),
     path('api/stats/faculty/', views.ActiveFacultyView.as_view(), name='active-faculty'),
 ]
-
