@@ -1,7 +1,5 @@
 {% extends 'base.html' %}
-
 {% block title %}Profile{% endblock %}
-
 {% block content %}
 <div class="container mx-auto p-6">
     <h1 class="text-3xl font-bold mb-6">Profile</h1>
@@ -10,16 +8,7 @@
         <img src="{{ profile.avatar.url }}" alt="Profile Picture" class="w-32 h-32 rounded-full mx-auto mb-4">
         {% endif %}
         <h3>{{ profile.user.get_full_name|default:profile.user.username }}</h3>
-        {% if user.is_staff %}
-        <p><strong>Department:</strong> {{ profile.department }}</p>
-        {% else %}
-        <p><strong>Roll Number:</strong> {{ profile.roll_number }}</p>
-        {% endif %}
-        <p><strong>Phone:</strong> {{ profile.phone|default:"Not provided" }}</p>
-        {% if user.is_staff %}
-        <p><strong>Bio:</strong> {{ profile.bio|default:"Not provided" }}</p>
-        {% endif %}
-
+        <p><strong>Role:</strong> {{ profile.get_role_display }}</p>
         {% if can_edit %}
         <form method="post" enctype="multipart/form-data" class="mt-4">
             {% csrf_token %}
