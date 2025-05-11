@@ -1,8 +1,6 @@
 from datetime import datetime
 import csv
 import pandas as pd
-import json
-
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
@@ -31,7 +29,6 @@ from timetable.models import Timetable
 from .forms import EventForm
 
 # --- Serializers ---
-
 class TimetableSerializer(serializers.ModelSerializer):
     classroom = serializers.PrimaryKeyRelatedField(queryset=Classroom.objects.all())
     teacher = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_staff=True))
@@ -40,7 +37,6 @@ class TimetableSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 # --- Admin Dashboard Views ---
-
 @user_passes_test(is_admin)
 def admin_dashboard_view(request):
     total_classrooms = Classroom.objects.count()
@@ -139,7 +135,6 @@ def occupied_classrooms_view(request):
     return render(request, 'admin_dashboard/classroom_list.html', {'classrooms': classrooms, 'title': 'Occupied Classrooms'})
 
 # --- API Views ---
-
 class TimetableUploadView(APIView):
     parser_classes = [MultiPartParser]
     permission_classes = [IsAdminUser]
@@ -229,7 +224,6 @@ def delete_timetable(request, pk):
         return Response({'error': 'Timetable entry not found'}, status=status.HTTP_404_NOT_FOUND)
 
 # --- CSRF-EXEMPTED DASHBOARD CHART VIEWS ---
-
 @method_decorator(csrf_exempt, name='dispatch')
 class UsageStatsView(APIView):
     permission_classes = [IsAdminUser]
@@ -262,19 +256,17 @@ class PeakHoursView(APIView):
         })
 
 @method_decorator(csrf_exempt, name='dispatch')
-class ActiveFacultyView(APIView):
+class MostBookedClassroomsView(APIView):
     permission_classes = [IsAdminUser]
     def get(self, request):
-        block = request.GET.get('block')
-        query = Timetable.objects.all()
-        if block:
-            query = query.filter(classroom__block__name=block)
-        data = query.values('teacher__username').annotate(count=Count('id')).order_by('-count')
+        data = (Booking.objects
+                .values('classroom__name')
+                .annotate(count=Count('id'))
+                .order_by('-count')[:5])
         return Response({
-            'labels': [d['teacher__username'] for d in data],
+            'labels': [d['classroom__name'] for d in data],
             'data': [d['count'] for d in data]
         })
-
 class BookingListView(APIView):
     permission_classes = [IsAdminUser]
     def get(self, request):

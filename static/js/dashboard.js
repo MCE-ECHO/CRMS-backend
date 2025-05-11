@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Approve/Reject Booking Actions
     function handleBookingAction(bookingId, action) {
         Swal.fire({
-            title: `Processing...`,
+            title: 'Processing...',
             allowOutsideClick: false,
             didOpen: () => Swal.showLoading()
         });
@@ -207,6 +207,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.error('Error:', error);
             });
     }
+
     document.querySelectorAll('.approve-btn').forEach(button => {
         button.addEventListener('click', (e) => {
             const bookingId = e.target.dataset.bookingId;
@@ -225,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Chart.js chart instances
     let usageChart = null;
     let peakHoursChart = null;
-    let activeFacultyChart = null;
+    let mostBookedClassroomsChart = null;
 
     // Get filter elements
     const blockFilter = document.getElementById('blockFilter');
@@ -251,8 +252,11 @@ document.addEventListener('DOMContentLoaded', function () {
     // Classroom Usage Chart
     function loadUsageChart() {
         const { block, day } = getFilters();
-        fetch(buildUrl('/admin-dashboard/api/stats/usage/', { block, day }))
-            .then(response => response.json())
+        fetch(buildUrl('/admin-dashboard/api/stats/usage/', { block, day }), { credentials: 'same-origin' })
+            .then(response => {
+                if (!response.ok) throw new Error();
+                return response.json();
+            })
             .then(data => {
                 const ctx = document.getElementById('usageChart').getContext('2d');
                 if (usageChart) usageChart.destroy();
@@ -280,8 +284,11 @@ document.addEventListener('DOMContentLoaded', function () {
     // Peak Hours Chart
     function loadPeakHoursChart() {
         const { day } = getFilters();
-        fetch(buildUrl('/admin-dashboard/api/stats/peakhours/', { day }))
-            .then(response => response.json())
+        fetch(buildUrl('/admin-dashboard/api/stats/peakhours/', { day }), { credentials: 'same-origin' })
+            .then(response => {
+                if (!response.ok) throw new Error();
+                return response.json();
+            })
             .then(data => {
                 const ctx = document.getElementById('peakHoursChart').getContext('2d');
                 if (peakHoursChart) peakHoursChart.destroy();
@@ -306,22 +313,24 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
-    // Active Faculty Chart
-    function loadActiveFacultyChart() {
-        const { block } = getFilters();
-        fetch(buildUrl('/admin-dashboard/api/stats/faculty/', { block }))
-            .then(response => response.json())
+    // Most Booked Classrooms Chart
+    function loadMostBookedClassroomsChart() {
+        fetch('/admin-dashboard/api/stats/most-booked/', { credentials: 'same-origin' })
+            .then(response => {
+                if (!response.ok) throw new Error();
+                return response.json();
+            })
             .then(data => {
-                const ctx = document.getElementById('activeFacultyChart').getContext('2d');
-                if (activeFacultyChart) activeFacultyChart.destroy();
-                activeFacultyChart = new Chart(ctx, {
+                const ctx = document.getElementById('mostBookedClassroomsChart').getContext('2d');
+                if (mostBookedClassroomsChart) mostBookedClassroomsChart.destroy();
+                mostBookedClassroomsChart = new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: data.labels,
                         datasets: [{
-                            label: 'Active Classes',
+                            label: 'Bookings',
                             data: data.data,
-                            backgroundColor: 'rgba(75, 192, 192, 0.7)'
+                            backgroundColor: 'rgba(153, 102, 255, 0.7)'
                         }]
                     },
                     options: {
@@ -331,7 +340,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             })
             .catch(() => {
-                alert('Failed to load Active Faculty chart.');
+                alert('Failed to load Most Booked Classrooms chart.');
             });
     }
 
@@ -339,7 +348,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function loadAllCharts() {
         loadUsageChart();
         loadPeakHoursChart();
-        loadActiveFacultyChart();
+        loadMostBookedClassroomsChart();
     }
 
     // Attach filter change event handlers
@@ -349,13 +358,17 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initial load
     loadAllCharts();
 
-    // Helper function to get CSRF token
+    // Utility for CSRF token (used in some fetches above)
     function getCSRFToken() {
-        const cookieValue = document.cookie
-            .split('; ')
-            .find(row => row.startsWith('csrftoken='))
-            ?.split('=')[1];
-        return cookieValue || '';
+        const name = 'csrftoken';
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + '=')) {
+                return decodeURIComponent(cookie.substring(name.length + 1));
+            }
+        }
+        return '';
     }
 });
 
