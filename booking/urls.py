@@ -16,4 +16,3 @@ urlpatterns = [
     path('admin/approve/<int:pk>/', approve_booking, name='approve-booking'),
     path('admin/reject/<int:pk>/', reject_booking, name='reject-booking'),
 ]
-
