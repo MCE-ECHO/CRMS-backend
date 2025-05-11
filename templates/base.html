@@ -5,10 +5,12 @@
     <meta charset="UTF-8">
     <title>{% block title %}Classroom Booking System{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     {% include "partials/navbar.html" %}
+    <button id="darkModeToggle" class="btn btn-secondary fixed top-4 right-4">Toggle Dark Mode</button>
     <main>
         {% if messages %}
         <div class="messages">
@@ -19,6 +21,7 @@
         {% endif %}
         {% block content %}{% endblock %}
     </main>
+    <script src="{% static 'js/global.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
