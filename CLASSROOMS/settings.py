@@ -2,7 +2,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-load_dotenv()  # Load environment variables
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -22,7 +22,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    # Project apps
     'accounts',
     'classroom',
     'timetable',
@@ -101,9 +100,6 @@ REST_FRAMEWORK = {
 CORS_ORIGIN_ALLOW_ALL = DEBUG
 CORS_ALLOW_CREDENTIALS = True
 
-# Uncomment for production:
-# CORS_ALLOWED_ORIGINS = [origin.strip() for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if origin.strip()]
-
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "http://localhost,http://127.0.0.1").split(",") if origin.strip()]
 
 SESSION_COOKIE_AGE = 1209600
@@ -113,4 +109,3 @@ CSRF_COOKIE_SECURE = not DEBUG
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
-
