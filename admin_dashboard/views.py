@@ -1,6 +1,7 @@
 from datetime import datetime
 import csv
 import pandas as pd
+import json
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
@@ -8,6 +9,7 @@ from django.db.models import Count
 from django.db.models.functions import ExtractHour
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
 from rest_framework import serializers, status
 from rest_framework.decorators import api_view
 from rest_framework.parsers import MultiPartParser
@@ -122,7 +124,6 @@ def occupied_classrooms_view(request):
 class TimetableSerializer(serializers.ModelSerializer):
     classroom = serializers.PrimaryKeyRelatedField(queryset=Classroom.objects.all())
     teacher = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_staff=True))
-
     class Meta:
         model = Timetable
         fields = '__all__'
@@ -233,7 +234,11 @@ class UsageStatsView(APIView):
 class PeakHoursView(APIView):
     permission_classes = [IsAdminUser]
     def get(self, request):
-        data = Timetable.objects.annotate(hour=ExtractHour('start_time')).values('hour').annotate(count=Count('id')).order_by('hour')
+        day = request.GET.get('day')
+        query = Timetable.objects.annotate(hour=ExtractHour('start_time')).values('hour').annotate(count=Count('id')).order_by('hour')
+        if day:
+            query = query.filter(day=day)
+        data = query
         return Response({
             'labels': [f"{d['hour']}:00" for d in data],
             'data': [d['count'] for d in data]
@@ -242,7 +247,11 @@ class PeakHoursView(APIView):
 class ActiveFacultyView(APIView):
     permission_classes = [IsAdminUser]
     def get(self, request):
-        data = Timetable.objects.values('teacher__username').annotate(count=Count('id')).order_by('-count')
+        block_id = request.GET.get('block')
+        query = Timetable.objects
+        if block_id:
+            query = query.filter(classroom__block_id=block_id)
+        data = query.values('teacher__username').annotate(count=Count('id')).order_by('-count')
         return Response({
             'labels': [d['teacher__username'] for d in data],
             'data': [d['count'] for d in data]
@@ -322,3 +331,25 @@ def export_timetable_csv(request):
             row.subject_name or 'N/A'
         ])
     return response
+
+@api_view(['GET'])
+@user_passes_test(is_admin)
+def classroom_status(request):
+    block = request.GET.get('block')
+    day = request.GET.get('day', timezone.now().strftime('%A'))  # Default to today
+    classrooms = Classroom.objects.all()
+    if block:
+        classrooms = classrooms.filter(block__name=block)
+    
+    current_time = timezone.now().time()
+    date = timezone.now().date()
+    
+    occupied = Booking.objects.filter(
+        date=date,
+        start_time__lte=current_time,
+        end_time__gte=current_time,
+        status='approved'
+    ).count()
+    
+    empty = classrooms.count() - occupied
+    return Response({'empty': empty, 'occupied': occupied})
