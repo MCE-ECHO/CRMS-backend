@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         successCallback(events);
                     })
                     .catch(error => {
-                        handleError(error, 'calendar', 'Failed to load timetable.');
+                        console.error('Calendar error:', error);
                         failureCallback(error);
                     });
             },
@@ -50,4 +50,3 @@ document.addEventListener('DOMContentLoaded', function () {
         return days.indexOf(day);
     }
 });
-
