@@ -17,6 +17,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from accounts.models import Event
+from accounts.serializers import EventSerializer  # Import from accounts
 from accounts.utils import is_admin
 from booking.models import Booking
 from booking.serializers import BookingSerializer
@@ -33,11 +34,6 @@ class TimetableSerializer(serializers.ModelSerializer):
         model = Timetable
         fields = '__all__'
 
-class EventSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Event
-        fields = ['id', 'title', 'start_date', 'end_date', 'description', 'created_by']
-
 # Admin Dashboard Views
 @user_passes_test(is_admin)
 def admin_dashboard_view(request):
@@ -45,7 +41,7 @@ def admin_dashboard_view(request):
     empty_classrooms = Classroom.objects.filter(status='free').count()
     occupied_classrooms = Classroom.objects.filter(status='occupied').count()
     pending_bookings = Booking.objects.filter(status='pending').count()
-    upcoming_events = Event.objects.filter(start_date__gte=datetime.now()).order_by('start_date')[:5]
+    upcoming_events = Event.objects.filter(start_date__gte=datetime.now()).select_related('created_by').order_by('start_date')[:5]
     blocks = Block.objects.all()
     days = [choice[0] for choice in Timetable.DAY_CHOICES]
     context = {
@@ -105,12 +101,7 @@ def booking_management(request):
 @user_passes_test(is_admin)
 def event_management(request):
     events = Event.objects.all()
-    # Prepare events data for FullCalendar
-    events_json = json.dumps(EventSerializer(events, many=True).data)
-    return render(request, 'admin_dashboard/event_management.html', {
-        'events': events,
-        'events_json': events_json
-    })
+    return render(request, 'admin_dashboard/event_management.html', {'events': events})
 
 @user_passes_test(is_admin)
 def event_create_view(request):
@@ -154,9 +145,9 @@ class TimetableUploadView(APIView):
             df = pd.read_excel(file) if file.name.endswith('.xlsx') else pd.read_csv(file)
             required_columns = ['classroom', 'teacher', 'day', 'start_time', 'end_time']
             if not all(col in df.columns for col in required_columns):
-                return Response({"error": "Missing required columns"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "Missing required columns: must include 'classroom', 'teacher', 'day', 'start_time', 'end_time'"}, status=status.HTTP_400_BAD_REQUEST)
             errors, success_count = [], 0
-            for _, row in df.iterrows():
+            for idx, row in df.iterrows():
                 try:
                     classroom = Classroom.objects.get(name=row['classroom'])
                     teacher = User.objects.get(username=row['teacher'])
@@ -169,7 +160,7 @@ class TimetableUploadView(APIView):
                         end_time__gt=start_time
                     )
                     if conflict.exists():
-                        errors.append(f"Conflict for {row['classroom']} on {row['day']} at {row['start_time']}")
+                        errors.append(f"Row {idx + 1}: Conflict for {row['classroom']} on {row['day']} from {row['start_time']} to {row['end_time']}")
                         continue
                     Timetable.objects.create(
                         classroom=classroom,
@@ -181,16 +172,18 @@ class TimetableUploadView(APIView):
                     )
                     success_count += 1
                 except Classroom.DoesNotExist:
-                    errors.append(f"Classroom '{row['classroom']}' not found")
+                    errors.append(f"Row {idx + 1}: Classroom '{row['classroom']}' not found")
                 except User.DoesNotExist:
-                    errors.append(f"Teacher '{row['teacher']}' not found")
+                    errors.append(f"Row {idx + 1}: Teacher '{row['teacher']}' not found")
+                except ValueError as e:
+                    errors.append(f"Row {idx + 1}: Invalid time format for start_time or end_time - {str(e)}")
                 except Exception as e:
-                    errors.append(str(e))
+                    errors.append(f"Row {idx + 1}: {str(e)}")
             if errors:
-                return Response({"message": f"Partial success: {success_count} added", "errors": errors}, status=status.HTTP_207_MULTI_STATUS)
-            return Response({"message": f"{success_count} entries added"}, status=status.HTTP_201_CREATED)
+                return Response({"message": f"Partial success: {success_count} entries added", "errors": errors}, status=status.HTTP_207_MULTI_STATUS)
+            return Response({"message": f"Success: {success_count} entries added"}, status=status.HTTP_201_CREATED)
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"error": f"Failed to process file: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 @user_passes_test(is_admin)
@@ -218,7 +211,7 @@ def update_timetable(request, pk):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Timetable.DoesNotExist:
-        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Timetable entry not found'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['DELETE'])
 @user_passes_test(is_admin)
@@ -227,17 +220,17 @@ def delete_timetable(request, pk):
         Timetable.objects.get(pk=pk).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     except Timetable.DoesNotExist:
-        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Timetable entry not found'}, status=status.HTTP_404_NOT_FOUND)
 
 class UsageStatsView(APIView):
     permission_classes = [IsAdminUser]
     
     def get(self, request):
-        block_id = request.GET.get('block')
+        block = request.GET.get('block')  # Changed to block name for consistency
         day = request.GET.get('day')
         query = Timetable.objects.all()
-        if block_id:
-            query = query.filter(classroom__block__name=block_id)  # Updated to filter by block name
+        if block:
+            query = query.filter(classroom__block__name=block)
         if day:
             query = query.filter(day=day)
         data = query.values('classroom__name').annotate(count=Count('id')).order_by('-count')
@@ -264,10 +257,10 @@ class ActiveFacultyView(APIView):
     permission_classes = [IsAdminUser]
     
     def get(self, request):
-        block_id = request.GET.get('block')
+        block = request.GET.get('block')  # Changed to block name for consistency
         query = Timetable.objects.all()
-        if block_id:
-            query = query.filter(classroom__block__name=block_id)  # Updated to filter by block name
+        if block:
+            query = query.filter(classroom__block__name=block)
         data = query.values('teacher__username').annotate(count=Count('id')).order_by('-count')
         return Response({
             'labels': [d['teacher__username'] for d in data],
@@ -297,9 +290,11 @@ class BookingDetailView(APIView):
 def approve_booking(request, pk):
     try:
         booking = Booking.objects.get(pk=pk)
+        if booking.status != 'pending':
+            return Response({'error': 'Booking is not in pending status'}, status=status.HTTP_400_BAD_REQUEST)
         booking.status = 'approved'
         booking.save()
-        return Response({'message': 'Booking approved'})
+        return Response({'message': 'Booking approved successfully'})
     except Booking.DoesNotExist:
         return Response({'error': 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -308,9 +303,11 @@ def approve_booking(request, pk):
 def reject_booking(request, pk):
     try:
         booking = Booking.objects.get(pk=pk)
+        if booking.status != 'pending':
+            return Response({'error': 'Booking is not in pending status'}, status=status.HTTP_400_BAD_REQUEST)
         booking.status = 'rejected'
         booking.save()
-        return Response({'message': 'Booking rejected'})
+        return Response({'message': 'Booking rejected successfully'})
     except Booking.DoesNotExist:
         return Response({'error': 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -318,7 +315,7 @@ class EventListView(APIView):
     permission_classes = [IsAdminUser]
     
     def get(self, request):
-        events = Event.objects.all()
+        events = Event.objects.select_related('created_by').all()
         serializer = EventSerializer(events, many=True)
         return Response(serializer.data)
 
@@ -328,7 +325,7 @@ def event_create_api(request):
     serializer = EventSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save(created_by=request.user)
-        return Response({'message': 'Event created'}, status=status.HTTP_201_CREATED)
+        return Response({'message': 'Event created successfully'}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
@@ -339,7 +336,9 @@ def available_classrooms(request):
         start = datetime.strptime(request.GET['start_time'], "%H:%M").time()
         end = datetime.strptime(request.GET['end_time'], "%H:%M").time()
     except (KeyError, ValueError):
-        return Response({'error': 'Invalid input'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Invalid input: date (YYYY-MM-DD), start_time (HH:MM), and end_time (HH:MM) are required'}, status=status.HTTP_400_BAD_REQUEST)
+    if start >= end:
+        return Response({'error': 'End time must be after start time'}, status=status.HTTP_400_BAD_REQUEST)
     block = request.GET.get('block')
     day_name = date.strftime('%A')
     booked = Timetable.objects.filter(day=day_name, start_time__lt=end, end_time__gt=start)
@@ -383,6 +382,11 @@ def export_timetable_csv(request):
 def classroom_status(request):
     block = request.GET.get('block')
     day = request.GET.get('day', timezone.now().strftime('%A'))  # Default to today
+    # Validate day
+    valid_days = [choice[0] for choice in Timetable.DAY_CHOICES]
+    if day not in valid_days:
+        return Response({'error': f"Invalid day: must be one of {valid_days}"}, status=status.HTTP_400_BAD_REQUEST)
+    
     classrooms = Classroom.objects.all()
     if block:
         classrooms = classrooms.filter(block__name=block)
@@ -391,9 +395,9 @@ def classroom_status(request):
     current_time = timezone.now().time()
     date = timezone.now().date() if day == timezone.now().strftime('%A') else None
 
-    # Check current bookings
+    # Check current bookings (only if the day is today)
     occupied_bookings = 0
-    if date:  # Only count bookings if the day matches today
+    if date:
         occupied_bookings = Booking.objects.filter(
             date=date,
             start_time__lte=current_time,
@@ -410,6 +414,6 @@ def classroom_status(request):
 
     total_occupied = occupied_bookings + occupied_timetables
     total_classrooms = classrooms.count()
-    empty = total_classrooms - total_occupied if total_classrooms >= total_occupied else 0
+    empty = max(total_classrooms - total_occupied, 0)  # Ensure empty is not negative
 
     return Response({'empty': empty, 'occupied': total_occupied})
