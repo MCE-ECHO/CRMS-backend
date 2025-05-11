@@ -12,7 +12,6 @@ class Timetable(models.Model):
         ('Saturday', 'Saturday'),
         ('Sunday', 'Sunday'),
     )
-
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE)
     teacher = models.ForeignKey(User, on_delete=models.CASCADE)
     day = models.CharField(max_length=10, choices=DAY_CHOICES)
