@@ -24,6 +24,21 @@ from classroom.models import Block, Classroom
 from timetable.models import Timetable
 from .forms import EventForm
 
+# Serializers
+class TimetableSerializer(serializers.ModelSerializer):
+    classroom = serializers.PrimaryKeyRelatedField(queryset=Classroom.objects.all())
+    teacher = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_staff=True))
+    
+    class Meta:
+        model = Timetable
+        fields = '__all__'
+
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = ['id', 'title', 'start_date', 'end_date', 'description', 'created_by']
+
+# Admin Dashboard Views
 @user_passes_test(is_admin)
 def admin_dashboard_view(request):
     total_classrooms = Classroom.objects.count()
@@ -90,7 +105,12 @@ def booking_management(request):
 @user_passes_test(is_admin)
 def event_management(request):
     events = Event.objects.all()
-    return render(request, 'admin_dashboard/event_management.html', {'events': events})
+    # Prepare events data for FullCalendar
+    events_json = json.dumps(EventSerializer(events, many=True).data)
+    return render(request, 'admin_dashboard/event_management.html', {
+        'events': events,
+        'events_json': events_json
+    })
 
 @user_passes_test(is_admin)
 def event_create_view(request):
@@ -121,17 +141,11 @@ def occupied_classrooms_view(request):
     classrooms = Classroom.objects.filter(status='occupied')
     return render(request, 'admin_dashboard/classroom_list.html', {'classrooms': classrooms, 'title': 'Occupied Classrooms'})
 
-class TimetableSerializer(serializers.ModelSerializer):
-    classroom = serializers.PrimaryKeyRelatedField(queryset=Classroom.objects.all())
-    teacher = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_staff=True))
-    class Meta:
-        model = Timetable
-        fields = '__all__'
-
+# API Views
 class TimetableUploadView(APIView):
     parser_classes = [MultiPartParser]
     permission_classes = [IsAdminUser]
-
+    
     def post(self, request, *args, **kwargs):
         file = request.FILES.get('file')
         if not file:
@@ -217,12 +231,13 @@ def delete_timetable(request, pk):
 
 class UsageStatsView(APIView):
     permission_classes = [IsAdminUser]
+    
     def get(self, request):
         block_id = request.GET.get('block')
         day = request.GET.get('day')
-        query = Timetable.objects
+        query = Timetable.objects.all()
         if block_id:
-            query = query.filter(classroom__block_id=block_id)
+            query = query.filter(classroom__block__name=block_id)  # Updated to filter by block name
         if day:
             query = query.filter(day=day)
         data = query.values('classroom__name').annotate(count=Count('id')).order_by('-count')
@@ -233,6 +248,7 @@ class UsageStatsView(APIView):
 
 class PeakHoursView(APIView):
     permission_classes = [IsAdminUser]
+    
     def get(self, request):
         day = request.GET.get('day')
         query = Timetable.objects.annotate(hour=ExtractHour('start_time')).values('hour').annotate(count=Count('id')).order_by('hour')
@@ -246,11 +262,12 @@ class PeakHoursView(APIView):
 
 class ActiveFacultyView(APIView):
     permission_classes = [IsAdminUser]
+    
     def get(self, request):
         block_id = request.GET.get('block')
-        query = Timetable.objects
+        query = Timetable.objects.all()
         if block_id:
-            query = query.filter(classroom__block_id=block_id)
+            query = query.filter(classroom__block__name=block_id)  # Updated to filter by block name
         data = query.values('teacher__username').annotate(count=Count('id')).order_by('-count')
         return Response({
             'labels': [d['teacher__username'] for d in data],
@@ -259,9 +276,21 @@ class ActiveFacultyView(APIView):
 
 class BookingListView(APIView):
     permission_classes = [IsAdminUser]
+    
     def get(self, request):
         bookings = Booking.objects.select_related('user', 'classroom').all()
         return Response(BookingSerializer(bookings, many=True).data)
+
+class BookingDetailView(APIView):
+    permission_classes = [IsAdminUser]
+    
+    def get(self, request, pk):
+        try:
+            booking = Booking.objects.select_related('user', 'classroom').get(pk=pk)
+            serializer = BookingSerializer(booking)
+            return Response(serializer.data)
+        except Booking.DoesNotExist:
+            return Response({'error': 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['POST'])
 @user_passes_test(is_admin)
@@ -284,6 +313,23 @@ def reject_booking(request, pk):
         return Response({'message': 'Booking rejected'})
     except Booking.DoesNotExist:
         return Response({'error': 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
+
+class EventListView(APIView):
+    permission_classes = [IsAdminUser]
+    
+    def get(self, request):
+        events = Event.objects.all()
+        serializer = EventSerializer(events, many=True)
+        return Response(serializer.data)
+
+@api_view(['POST'])
+@user_passes_test(is_admin)
+def event_create_api(request):
+    serializer = EventSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save(created_by=request.user)
+        return Response({'message': 'Event created'}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @user_passes_test(is_admin)
@@ -340,16 +386,30 @@ def classroom_status(request):
     classrooms = Classroom.objects.all()
     if block:
         classrooms = classrooms.filter(block__name=block)
-    
+
+    # Calculate occupied classrooms based on bookings and timetable for the specified day
     current_time = timezone.now().time()
-    date = timezone.now().date()
-    
-    occupied = Booking.objects.filter(
-        date=date,
+    date = timezone.now().date() if day == timezone.now().strftime('%A') else None
+
+    # Check current bookings
+    occupied_bookings = 0
+    if date:  # Only count bookings if the day matches today
+        occupied_bookings = Booking.objects.filter(
+            date=date,
+            start_time__lte=current_time,
+            end_time__gte=current_time,
+            status='approved'
+        ).count()
+
+    # Check timetable conflicts for the specified day
+    occupied_timetables = Timetable.objects.filter(
+        day=day,
         start_time__lte=current_time,
-        end_time__gte=current_time,
-        status='approved'
+        end_time__gte=current_time
     ).count()
-    
-    empty = classrooms.count() - occupied
-    return Response({'empty': empty, 'occupied': occupied})
+
+    total_occupied = occupied_bookings + occupied_timetables
+    total_classrooms = classrooms.count()
+    empty = total_classrooms - total_occupied if total_classrooms >= total_occupied else 0
+
+    return Response({'empty': empty, 'occupied': total_occupied})
