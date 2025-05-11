@@ -1,22 +1,24 @@
 from django import forms
 from .models import TeacherProfile, StudentProfile, Event
+from booking.models import Booking
+from classroom.models import Classroom
 
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = TeacherProfile
-        fields = ['department', 'avatar', 'phone']
+        fields = ['avatar', 'role']
         widgets = {
-            'department': forms.TextInput(attrs={'class': 'w-full p-3 border rounded-lg'}),
-            'phone': forms.TextInput(attrs={'class': 'w-full p-3 border rounded-lg'}),
+            'avatar': forms.FileInput(attrs={'class': 'w-full p-3 border rounded-lg'}),
+            'role': forms.Select(attrs={'class': 'w-full p-3 border rounded-lg'}),
         }
 
 class StudentProfileForm(forms.ModelForm):
     class Meta:
         model = StudentProfile
-        fields = ['roll_number', 'avatar', 'phone']
+        fields = ['avatar', 'role']
         widgets = {
-            'roll_number': forms.TextInput(attrs={'class': 'w-full p-3 border rounded-lg'}),
-            'phone': forms.TextInput(attrs={'class': 'w-full p-3 border rounded-lg'}),
+            'avatar': forms.FileInput(attrs={'class': 'w-full p-3 border rounded-lg'}),
+            'role': forms.Select(attrs={'class': 'w-full p-3 border rounded-lg'}),
         }
 
 class EventForm(forms.ModelForm):
@@ -30,3 +32,21 @@ class EventForm(forms.ModelForm):
             'visibility': forms.Select(attrs={'class': 'w-full p-3 border rounded-lg'}),
         }
 
+class BookingForm(forms.ModelForm):
+    classroom = forms.ModelChoiceField(
+        queryset=Classroom.objects.all(),
+        widget=forms.Select(attrs={'class': 'w-full p-3 border rounded-lg'})
+    )
+    date = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'w-full p-3 border rounded-lg'})
+    )
+    start_time = forms.TimeField(
+        widget=forms.TimeInput(attrs={'type': 'time', 'class': 'w-full p-3 border rounded-lg'})
+    )
+    end_time = forms.TimeField(
+        widget=forms.TimeInput(attrs={'type': 'time', 'class': 'w-full p-3 border rounded-lg'})
+    )
+
+    class Meta:
+        model = Booking
+        fields = ['classroom', 'date', 'start_time', 'end_time']
