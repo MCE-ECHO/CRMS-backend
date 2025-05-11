@@ -1,7 +1,6 @@
 from datetime import datetime
 import csv
 import pandas as pd
-
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
@@ -9,14 +8,12 @@ from django.db.models import Count
 from django.db.models.functions import ExtractHour
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
-
 from rest_framework import serializers, status
 from rest_framework.decorators import api_view
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
 from accounts.models import Event
 from accounts.utils import is_admin
 from booking.models import Booking
@@ -25,44 +22,23 @@ from classroom.models import Block, Classroom
 from timetable.models import Timetable
 from .forms import EventForm
 
-# ------------------------
-# DASHBOARD & MANAGEMENT VIEWS
-# ------------------------
-
 @user_passes_test(is_admin)
 def admin_dashboard_view(request):
     total_classrooms = Classroom.objects.count()
-    occupied = Classroom.objects.filter(status='occupied').count()
-    available = Classroom.objects.filter(status='free').count()
-    maintenance = Classroom.objects.filter(status='maintenance').count()
+    empty_classrooms = Classroom.objects.filter(status='free').count()
+    occupied_classrooms = Classroom.objects.filter(status='occupied').count()
     pending_bookings = Booking.objects.filter(status='pending').count()
-    upcoming_classes = Timetable.objects.filter(start_time__gte=datetime.now().time()).order_by('start_time')[:5]
     upcoming_events = Event.objects.filter(start_date__gte=datetime.now()).order_by('start_date')[:5]
     blocks = Block.objects.all()
-    donut_data = {
-        'occupied': occupied,
-        'available': available,
-        'maintenance': maintenance,
-        'pending': pending_bookings,
-    }
-    weekly_usage = (
-        Timetable.objects
-        .extra({'weekday': "strftime('%%w', start_time)"})
-        .values('weekday')
-        .annotate(count=Count('id'))
-        .order_by('weekday')
-    )
+    days = [choice[0] for choice in Timetable.DAY_CHOICES]
     context = {
         'total_classrooms': total_classrooms,
-        'occupied': occupied,
-        'available': available,
-        'maintenance': maintenance,
+        'empty_classrooms': empty_classrooms,
+        'occupied_classrooms': occupied_classrooms,
         'pending_bookings': pending_bookings,
-        'upcoming_classes': upcoming_classes,
         'upcoming_events': upcoming_events,
         'blocks': blocks,
-        'donut_data': donut_data,
-        'weekly_usage': weekly_usage,
+        'days': days,
     }
     return render(request, 'admin_dashboard/dashboard.html', context)
 
@@ -87,11 +63,26 @@ def upload_timetable(request):
 @user_passes_test(is_admin)
 def timetable_management(request):
     timetables = Timetable.objects.select_related('classroom', 'teacher').all()
-    return render(request, 'admin_dashboard/timetable_management.html', {'timetables': timetables})
+    block = request.GET.get('block')
+    classroom = request.GET.get('classroom')
+    day = request.GET.get('day')
+    if block:
+        timetables = timetables.filter(classroom__block__name__icontains=block)
+    if classroom:
+        timetables = timetables.filter(classroom__name__icontains=classroom)
+    if day:
+        timetables = timetables.filter(day=day)
+    context = {
+        'timetables': timetables,
+        'blocks': Block.objects.all(),
+        'classrooms': Classroom.objects.all(),
+        'days': [choice[0] for choice in Timetable.DAY_CHOICES],
+    }
+    return render(request, 'admin_dashboard/timetable_management.html', context)
 
 @user_passes_test(is_admin)
 def booking_management(request):
-    bookings = Booking.objects.select_related('teacher', 'classroom').all()
+    bookings = Booking.objects.select_related('user', 'classroom').all()
     return render(request, 'admin_dashboard/booking_management.html', {'bookings': bookings})
 
 @user_passes_test(is_admin)
@@ -109,8 +100,6 @@ def event_create_view(request):
             event.save()
             messages.success(request, 'Event created successfully.')
             return redirect('admin_dashboard:event-management')
-        else:
-            messages.error(request, 'Error creating event.')
     else:
         form = EventForm()
     return render(request, 'admin_dashboard/event_create.html', {'form': form})
@@ -120,9 +109,15 @@ def event_list_view(request):
     events = Event.objects.all()
     return render(request, 'admin_dashboard/event_list.html', {'events': events})
 
-# ------------------------
-# API VIEWS
-# ------------------------
+@user_passes_test(is_admin)
+def empty_classrooms_view(request):
+    classrooms = Classroom.objects.filter(status='free')
+    return render(request, 'admin_dashboard/classroom_list.html', {'classrooms': classrooms, 'title': 'Empty Classrooms'})
+
+@user_passes_test(is_admin)
+def occupied_classrooms_view(request):
+    classrooms = Classroom.objects.filter(status='occupied')
+    return render(request, 'admin_dashboard/classroom_list.html', {'classrooms': classrooms, 'title': 'Occupied Classrooms'})
 
 class TimetableSerializer(serializers.ModelSerializer):
     classroom = serializers.PrimaryKeyRelatedField(queryset=Classroom.objects.all())
@@ -223,10 +218,13 @@ class UsageStatsView(APIView):
     permission_classes = [IsAdminUser]
     def get(self, request):
         block_id = request.GET.get('block')
+        day = request.GET.get('day')
         query = Timetable.objects
         if block_id:
             query = query.filter(classroom__block_id=block_id)
-        data = query.values('classroom__name').annotate(count=Count('classroom')).order_by('-count')
+        if day:
+            query = query.filter(day=day)
+        data = query.values('classroom__name').annotate(count=Count('id')).order_by('-count')
         return Response({
             'labels': [d['classroom__name'] for d in data],
             'data': [d['count'] for d in data]
@@ -253,7 +251,7 @@ class ActiveFacultyView(APIView):
 class BookingListView(APIView):
     permission_classes = [IsAdminUser]
     def get(self, request):
-        bookings = Booking.objects.select_related('teacher', 'classroom').all()
+        bookings = Booking.objects.select_related('user', 'classroom').all()
         return Response(BookingSerializer(bookings, many=True).data)
 
 @api_view(['POST'])
@@ -324,4 +322,3 @@ def export_timetable_csv(request):
             row.subject_name or 'N/A'
         ])
     return response
-
