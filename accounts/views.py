@@ -7,12 +7,10 @@ from .utils import is_teacher, is_admin
 from timetable.models import Timetable
 from classroom.models import Classroom
 from booking.models import Booking
-from .forms import ProfileForm, StudentProfileForm, EventForm
+from .forms import ProfileForm, StudentProfileForm, EventForm, BookingForm
+from datetime import date
 
 def login_view(request):
-    """
-    Custom login view with 'next' support and error messages.
-    """
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -28,10 +26,6 @@ def login_view(request):
 
 @login_required
 def profile_view(request):
-    """
-    Profile view for both teachers and students.
-    Teachers: view-only by default; Students: editable.
-    """
     if is_teacher(request.user):
         profile = request.user.teacherprofile
         form_class = ProfileForm
@@ -59,68 +53,51 @@ def profile_view(request):
 @login_required
 @user_passes_test(is_teacher)
 def teacher_dashboard(request):
-    """
-    Dashboard for teachers: show timetable, bookings, classrooms, and events.
-    """
     profile = request.user.teacherprofile
-    timetable = Timetable.objects.filter(teacher=request.user).select_related('classroom')
-    bookings = Booking.objects.filter(user=request.user).select_related('classroom')  # FIXED HERE
-    classrooms = Classroom.objects.all()
+    today = date.today().strftime('%A')
+    day = request.GET.get('day', today)
+    timetable = Timetable.objects.filter(teacher=request.user, day=day).select_related('classroom')
+    bookings = Booking.objects.filter(user=request.user).select_related('classroom')[:5]
     events = Event.objects.filter(visibility__in=['public', 'teacher']).order_by('start_date')[:5]
-
     return render(request, 'accounts/teacher_dashboard.html', {
         'profile': profile,
         'timetable': timetable,
         'bookings': bookings,
-        'classrooms': classrooms,
         'events': events,
+        'current_day': day,
+        'days': Timetable.DAY_CHOICES,
     })
 
 @login_required
 @user_passes_test(is_teacher)
 def booking_create_view(request):
-    """
-    Create a booking for a classroom (teachers only).
-    """
     if request.method == 'POST':
-        classroom_id = request.POST.get('classroom')
-        date = request.POST.get('date')
-        start_time = request.POST.get('start_time')
-        end_time = request.POST.get('end_time')
-
-        try:
-            classroom = Classroom.objects.get(id=classroom_id)
-            # Check for overlapping bookings
-            overlap = Booking.objects.filter(
-                classroom=classroom,
-                date=date,
-                start_time__lt=end_time,
-                end_time__gt=start_time,
-                status__in=['pending', 'approved']
-            ).exists()
-            if overlap:
+        form = BookingForm(request.POST)
+        if form.is_valid():
+            booking = form.save(commit=False)
+            booking.user = request.user
+            conflicts = Booking.objects.filter(
+                classroom=booking.classroom,
+                date=booking.date,
+                start_time__lt=booking.end_time,
+                end_time__gt=booking.start_time,
+                status='approved'
+            )
+            if conflicts.exists():
                 messages.error(request, 'This classroom is already booked for the selected time.')
             else:
-                Booking.objects.create(
-                    user=request.user,  # FIXED HERE
-                    classroom=classroom,
-                    date=date,
-                    start_time=start_time,
-                    end_time=end_time,
-                    status='pending'
-                )
-                messages.success(request, 'Booking request submitted.')
-        except Classroom.DoesNotExist:
-            messages.error(request, 'Invalid classroom selected.')
-        return redirect('accounts:teacher-dashboard')
-    return redirect('accounts:teacher-dashboard')
+                booking.save()
+                messages.success(request, 'Booking request submitted successfully.')
+                return redirect('booking:booking-list')
+        else:
+            messages.error(request, 'Error creating booking. Please check the form.')
+    else:
+        form = BookingForm()
+    return render(request, 'accounts/booking_create.html', {'form': form})
 
 @login_required
 @user_passes_test(is_teacher)
 def event_create_view(request):
-    """
-    Create an event (teachers only).
-    """
     if request.method == 'POST':
         form = EventForm(request.POST)
         if form.is_valid():
@@ -128,18 +105,13 @@ def event_create_view(request):
             event.created_by = request.user
             event.save()
             messages.success(request, 'Event created successfully.')
-            return redirect('accounts:teacher-dashboard')
-        else:
-            messages.error(request, 'Error creating event. Please check the form.')
+            return redirect('accounts:event-list')
     else:
         form = EventForm()
     return render(request, 'accounts/event_create.html', {'form': form})
 
 @login_required
 def event_list_view(request):
-    """
-    List events visible to the user.
-    """
     if is_admin(request.user):
         events = Event.objects.all()
     elif is_teacher(request.user):
@@ -149,9 +121,6 @@ def event_list_view(request):
     return render(request, 'accounts/event_list.html', {'events': events})
 
 def home_redirect_view(request):
-    """
-    Redirect users to the appropriate dashboard based on their role.
-    """
     if request.user.is_authenticated:
         if is_admin(request.user):
             return redirect('admin_dashboard:admin-dashboard')
