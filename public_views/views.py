@@ -58,24 +58,20 @@ def availability_view(request):
         start_time = form.cleaned_data['start_time']
         end_time = form.cleaned_data['end_time']
         block = form.cleaned_data['block']
-
         booked_ids = set(Timetable.objects.filter(
             day=date.strftime('%A'),
             start_time__lt=end_time,
             end_time__gt=start_time
         ).values_list('classroom_id', flat=True))
-
         booked_ids.update(Booking.objects.filter(
             date=date,
             start_time__lt=end_time,
             end_time__gt=start_time,
             status='approved'
         ).values_list('classroom_id', flat=True))
-
         classrooms = Classroom.objects.exclude(id__in=booked_ids).select_related('block')
         if block:
             classrooms = classrooms.filter(block=block)
-
     return render(request, 'public_views/availability.html', {
         'form': form,
         'classrooms': classrooms
@@ -85,4 +81,3 @@ def availability_view(request):
 def public_classroom_list(request):
     data = [{'id': c.id, 'name': c.name, 'block': c.block.name} for c in Classroom.objects.select_related('block')]
     return Response(data)
-
