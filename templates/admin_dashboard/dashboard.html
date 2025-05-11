@@ -1,10 +1,35 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block title %}Admin Dashboard{% endblock %}
+
 {% block content %}
 <div class="container mx-auto p-6">
     <h1 class="text-3xl font-bold mb-6">Admin Dashboard</h1>
 
+    <!-- Filters -->
+    <div class="mb-6 flex flex-wrap space-x-4">
+        <div class="w-full sm:w-1/4">
+            <label for="blockFilter" class="block mb-1">Block</label>
+            <select id="blockFilter" class="w-full">
+                <option value="">All Blocks</option>
+                {% for block in blocks %}
+                <option value="{{ block.name }}">{{ block.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="w-full sm:w-1/4">
+            <label for="dayFilter" class="block mb-1">Day</label>
+            <select id="dayFilter" class="w-full">
+                <option value="">All Days</option>
+                {% for day in days %}
+                <option value="{{ day }}">{{ day }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- Status Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <div class="card">
             <h3>Pending Bookings</h3>
@@ -24,44 +49,33 @@
         </div>
         <div class="card">
             <h3>Empty Classrooms</h3>
-            <p class="text-2xl font-bold">{{ empty_classrooms }}</p>
+            <p class="text-2xl font-bold" id="emptyClassrooms">{{ empty_classrooms }}</p>
             <a href="{% url 'admin_dashboard:empty-classrooms' %}" class="btn btn-primary mt-4">View</a>
         </div>
         <div class="card">
             <h3>Occupied Classrooms</h3>
-            <p class="text-2xl font-bold">{{ occupied_classrooms }}</p>
+            <p class="text-2xl font-bold" id="occupiedClassrooms">{{ occupied_classrooms }}</p>
             <a href="{% url 'admin_dashboard:occupied-classrooms' %}" class="btn btn-primary mt-4">View</a>
         </div>
     </div>
 
+    <!-- Charts -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div class="card">
             <h3>Classroom Usage</h3>
-            <select id="blockFilter" class="w-full mb-4">
-                <option value="">All Blocks</option>
-                {% for block in blocks %}
-                <option value="{{ block.id }}">{{ block.name }}</option>
-                {% endfor %}
-            </select>
-            <select id="dayFilter" class="w-full mb-4">
-                <option value="">All Days</option>
-                {% for day in days %}
-                <option value="{{ day }}">{{ day }}</option>
-                {% endfor %}
-            </select>
             <canvas id="usageChart"></canvas>
         </div>
         <div class="card">
             <h3>Peak Hours</h3>
             <canvas id="peakHoursChart"></canvas>
         </div>
+        <div class="card col-span-1 md:col-span-2">
+            <h3>Active Faculty</h3>
+            <canvas id="activeFacultyChart"></canvas>
+        </div>
     </div>
 
-    <div class="card">
-        <h3>Active Faculty</h3>
-        <canvas id="activeFacultyChart"></canvas>
-    </div>
-
+    <!-- Upload Timetable -->
     <div class="card">
         <h3>Upload Timetable</h3>
         <form id="uploadForm" action="{% url 'admin_dashboard:upload-timetable' %}" method="post" enctype="multipart/form-data">
@@ -76,7 +90,8 @@
     </div>
 </div>
 {% endblock %}
+
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}
