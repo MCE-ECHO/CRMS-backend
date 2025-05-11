@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Sidebar Toggle
     const sidebar = document.querySelector('.sidebar');
     const toggle = document.querySelector('.sidebar-toggle');
     if (toggle && sidebar) {
@@ -9,7 +8,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Messages
     const messages = document.querySelectorAll('.messages .message');
     messages.forEach(message => {
         const type = message.classList.contains('success') ? 'success' :
@@ -22,7 +20,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Form Validation
     const forms = document.querySelectorAll('form');
     forms.forEach(form => {
         form.addEventListener('submit', function (e) {
@@ -48,7 +45,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Auto-submit Block Filter
     const blockFilters = document.querySelectorAll('select[name="block"]');
     blockFilters.forEach(filter => {
         filter.addEventListener('change', function () {
@@ -56,7 +52,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Date and Time Input Validation
     const dateInputs = document.querySelectorAll('input[type="date"]');
     const timeInputs = document.querySelectorAll('input[type="time"]');
     dateInputs.forEach(input => {
@@ -91,21 +86,54 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
-});
 
-// Error Handling Utility
-function handleError(error, elementId, message) {
-    console.error(`Error at ${elementId}:`, error);
-    Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: message,
-        confirmButtonColor: '#0071E3'
-    });
-    const element = document.getElementById(elementId);
-    if (element) {
-        element.innerHTML = `<p class="text-red-500">${message}</p>`;
+    const ctxUsage = document.getElementById('usageChart');
+    const ctxPeak = document.getElementById('peakHoursChart');
+    const ctxFaculty = document.getElementById('activeFacultyChart');
+    const blockFilter = document.getElementById('blockFilter');
+    const dayFilter = document.getElementById('dayFilter');
+
+    function updateChart(ctx, url, type, label) {
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                new Chart(ctx, {
+                    type: type,
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: label,
+                            data: data.data,
+                            backgroundColor: type === 'line' ? undefined : '#0071E3',
+                            borderColor: type === 'line' ? '#0071E3' : undefined,
+                            fill: type === 'line' ? false : undefined
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error(`Chart error for ${label}:`, error));
     }
-}
 
+    if (ctxUsage) {
+        function fetchUsage() {
+            let url = '/admin-dashboard/api/stats/usage/';
+            const params = new URLSearchParams();
+            if (blockFilter && blockFilter.value) params.append('block', blockFilter.value);
+            if (dayFilter && dayFilter.value) params.append('day', dayFilter.value);
+            url += `?${params.toString()}`;
+            updateChart(ctxUsage, url, 'bar', 'Classroom Usage');
+        }
+        fetchUsage();
+        if (blockFilter) blockFilter.addEventListener('change', fetchUsage);
+        if (dayFilter) dayFilter.addEventListener('change', fetchUsage);
+    }
 
+    if (ctxPeak) updateChart(ctxPeak, '/admin-dashboard/api/stats/peakhours/', 'line', 'Peak Hours');
+    if (ctxFaculty) updateChart(ctxFaculty, '/admin-dashboard/api/stats/faculty/', 'bar', 'Faculty Activity');
+});
