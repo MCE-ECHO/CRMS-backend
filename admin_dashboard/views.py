@@ -2,6 +2,7 @@ from datetime import datetime
 import csv
 import pandas as pd
 import json
+
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
@@ -10,14 +11,18 @@ from django.db.models.functions import ExtractHour
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+
 from rest_framework import serializers, status
 from rest_framework.decorators import api_view
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
 from accounts.models import Event
-from accounts.serializers import EventSerializer  # Import from accounts
+from accounts.serializers import EventSerializer
 from accounts.utils import is_admin
 from booking.models import Booking
 from booking.serializers import BookingSerializer
@@ -25,16 +30,17 @@ from classroom.models import Block, Classroom
 from timetable.models import Timetable
 from .forms import EventForm
 
-# Serializers
+# --- Serializers ---
+
 class TimetableSerializer(serializers.ModelSerializer):
     classroom = serializers.PrimaryKeyRelatedField(queryset=Classroom.objects.all())
     teacher = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_staff=True))
-    
     class Meta:
         model = Timetable
         fields = '__all__'
 
-# Admin Dashboard Views
+# --- Admin Dashboard Views ---
+
 @user_passes_test(is_admin)
 def admin_dashboard_view(request):
     total_classrooms = Classroom.objects.count()
@@ -132,11 +138,11 @@ def occupied_classrooms_view(request):
     classrooms = Classroom.objects.filter(status='occupied')
     return render(request, 'admin_dashboard/classroom_list.html', {'classrooms': classrooms, 'title': 'Occupied Classrooms'})
 
-# API Views
+# --- API Views ---
+
 class TimetableUploadView(APIView):
     parser_classes = [MultiPartParser]
     permission_classes = [IsAdminUser]
-    
     def post(self, request, *args, **kwargs):
         file = request.FILES.get('file')
         if not file:
@@ -222,11 +228,13 @@ def delete_timetable(request, pk):
     except Timetable.DoesNotExist:
         return Response({'error': 'Timetable entry not found'}, status=status.HTTP_404_NOT_FOUND)
 
+# --- CSRF-EXEMPTED DASHBOARD CHART VIEWS ---
+
+@method_decorator(csrf_exempt, name='dispatch')
 class UsageStatsView(APIView):
     permission_classes = [IsAdminUser]
-    
     def get(self, request):
-        block = request.GET.get('block')  # Changed to block name for consistency
+        block = request.GET.get('block')
         day = request.GET.get('day')
         query = Timetable.objects.all()
         if block:
@@ -239,9 +247,9 @@ class UsageStatsView(APIView):
             'data': [d['count'] for d in data]
         })
 
+@method_decorator(csrf_exempt, name='dispatch')
 class PeakHoursView(APIView):
     permission_classes = [IsAdminUser]
-    
     def get(self, request):
         day = request.GET.get('day')
         query = Timetable.objects.annotate(hour=ExtractHour('start_time')).values('hour').annotate(count=Count('id')).order_by('hour')
@@ -253,11 +261,11 @@ class PeakHoursView(APIView):
             'data': [d['count'] for d in data]
         })
 
+@method_decorator(csrf_exempt, name='dispatch')
 class ActiveFacultyView(APIView):
     permission_classes = [IsAdminUser]
-    
     def get(self, request):
-        block = request.GET.get('block')  # Changed to block name for consistency
+        block = request.GET.get('block')
         query = Timetable.objects.all()
         if block:
             query = query.filter(classroom__block__name=block)
@@ -269,14 +277,12 @@ class ActiveFacultyView(APIView):
 
 class BookingListView(APIView):
     permission_classes = [IsAdminUser]
-    
     def get(self, request):
         bookings = Booking.objects.select_related('user', 'classroom').all()
         return Response(BookingSerializer(bookings, many=True).data)
 
 class BookingDetailView(APIView):
     permission_classes = [IsAdminUser]
-    
     def get(self, request, pk):
         try:
             booking = Booking.objects.select_related('user', 'classroom').get(pk=pk)
@@ -313,7 +319,6 @@ def reject_booking(request, pk):
 
 class EventListView(APIView):
     permission_classes = [IsAdminUser]
-    
     def get(self, request):
         events = Event.objects.select_related('created_by').all()
         serializer = EventSerializer(events, many=True)
@@ -382,20 +387,14 @@ def export_timetable_csv(request):
 def classroom_status(request):
     block = request.GET.get('block')
     day = request.GET.get('day', timezone.now().strftime('%A'))  # Default to today
-    # Validate day
     valid_days = [choice[0] for choice in Timetable.DAY_CHOICES]
     if day not in valid_days:
         return Response({'error': f"Invalid day: must be one of {valid_days}"}, status=status.HTTP_400_BAD_REQUEST)
-    
     classrooms = Classroom.objects.all()
     if block:
         classrooms = classrooms.filter(block__name=block)
-
-    # Calculate occupied classrooms based on bookings and timetable for the specified day
     current_time = timezone.now().time()
     date = timezone.now().date() if day == timezone.now().strftime('%A') else None
-
-    # Check current bookings (only if the day is today)
     occupied_bookings = 0
     if date:
         occupied_bookings = Booking.objects.filter(
@@ -404,16 +403,13 @@ def classroom_status(request):
             end_time__gte=current_time,
             status='approved'
         ).count()
-
-    # Check timetable conflicts for the specified day
     occupied_timetables = Timetable.objects.filter(
         day=day,
         start_time__lte=current_time,
         end_time__gte=current_time
     ).count()
-
     total_occupied = occupied_bookings + occupied_timetables
     total_classrooms = classrooms.count()
-    empty = max(total_classrooms - total_occupied, 0)  # Ensure empty is not negative
-
+    empty = max(total_classrooms - total_occupied, 0)
     return Response({'empty': empty, 'occupied': total_occupied})
+
