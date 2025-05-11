@@ -9,4 +9,3 @@ class AdminDashboardTests(TestCase):
         self.client.login(username='admin', password='12345')
         response = self.client.get('/admin-dashboard/')
         self.assertEqual(response.status_code, 200)
-
