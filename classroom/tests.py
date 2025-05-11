@@ -8,4 +8,3 @@ class ClassroomModelTests(TestCase):
 
     def test_classroom_str(self):
         self.assertEqual(str(self.classroom), 'CSE101')
-
