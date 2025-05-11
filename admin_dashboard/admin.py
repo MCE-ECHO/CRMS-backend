@@ -29,4 +29,3 @@ class ClassroomAdmin(admin.ModelAdmin):
             display_text
         )
     status_badge.short_description = 'Status'
-
