@@ -19,4 +19,3 @@ class BookingModelTests(TestCase):
             status='pending'
         )
         self.assertEqual(str(booking), 'testuser - CSE101 on 2025-05-05')
-
