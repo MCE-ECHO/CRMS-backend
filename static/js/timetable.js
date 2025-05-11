@@ -54,17 +54,4 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
         });
     }
-
-    // Search
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            const query = this.value.toLowerCase();
-            const timetableForm = document.getElementById('timetableForm');
-            if (query) {
-                timetableForm.classroom.value = query;
-                timetableForm.dispatchEvent(new Event('submit'));
-            }
-        });
-    }
 });
