@@ -8,4 +8,3 @@ urlpatterns = [
     path('api/list/', classroom_list, name='api-classroom-list'),
     path('api/available/', available_classrooms, name='api-available-classrooms'),
 ]
-
