@@ -11,4 +11,3 @@ class EventForm(forms.ModelForm):
             'end_date': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'w-full p-3 border rounded-lg'}),
             'visibility': forms.Select(attrs={'class': 'w-full p-3 border rounded-lg'}),
         }
-
