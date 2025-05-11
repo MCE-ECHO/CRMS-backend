@@ -8,7 +8,6 @@ class Booking(models.Model):
         ('approved', 'Approved'),
         ('rejected', 'Rejected'),
     )
-
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE)
     date = models.DateField()
@@ -19,4 +18,3 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.classroom.name} on {self.date}"
-
