@@ -1,21 +1,24 @@
 {% extends 'base.html' %}
-
+{% load static %}
 {% block title %}Teacher Dashboard{% endblock %}
-
 {% block content %}
 <div class="container mx-auto p-6">
     <h1 class="text-3xl font-bold mb-6">Teacher Dashboard</h1>
 
-    <!-- Profile Overview -->
     <div class="card mb-6">
         <h3>Welcome, {{ profile.user.get_full_name|default:profile.user.username }}</h3>
-        <p><strong>Department:</strong> {{ profile.department }}</p>
-        <p><strong>Phone:</strong> {{ profile.phone|default:"Not provided" }}</p>
+        <p><strong>Role:</strong> {{ profile.get_role_display }}</p>
     </div>
 
-    <!-- Timetable -->
     <div class="card mb-6">
         <h3>My Timetable</h3>
+        <form method="get" class="mb-4">
+            <select name="day" class="w-full p-3 border rounded-lg" onchange="this.form.submit()">
+                {% for day_choice in days %}
+                <option value="{{ day_choice.0 }}" {% if current_day == day_choice.0 %}selected{% endif %}>{{ day_choice.1 }}</option>
+                {% endfor %}
+            </select>
+        </form>
         <table class="w-full">
             <thead>
                 <tr>
@@ -35,14 +38,18 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4" class="text-center">No timetable entries found.</td>
+                    <td colspan="4" class="text-center">No timetable entries for today.</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 
-    <!-- Bookings -->
+    <div class="card mb-6">
+        <h3>Timetable Calendar</h3>
+        <div id="teacherCalendar" class="calendar-container"></div>
+    </div>
+
     <div class="card mb-6">
         <h3>My Bookings</h3>
         <table class="w-full">
@@ -72,32 +79,6 @@
         <a href="{% url 'accounts:booking-create' %}" class="btn btn-primary mt-4">Create Booking</a>
     </div>
 
-    <!-- Classrooms -->
-    <div class="card mb-6">
-        <h3>Classrooms</h3>
-        <table class="w-full">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Block</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for classroom in classrooms %}
-                <tr>
-                    <td>{{ classroom.name }}</td>
-                    <td>{{ classroom.block.name }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="2" class="text-center">No classrooms found.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Events -->
     <div class="card">
         <h3>Upcoming Events</h3>
         <table class="w-full">
@@ -125,4 +106,11 @@
         <a href="{% url 'accounts:event-list' %}" class="btn btn-primary mt-4">View All Events</a>
     </div>
 </div>
+{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.css" rel="stylesheet">
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.js"></script>
+<script src="{% static 'js/teacher_dashboard.js' %}"></script>
 {% endblock %}
