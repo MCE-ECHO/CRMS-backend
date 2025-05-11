@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const messages = document.querySelectorAll('.messages .message');
     messages.forEach(message => {
         const type = message.classList.contains('success') ? 'success' :
-                     message.classList.contains('error') ? 'error' : 'info';
+            message.classList.contains('error') ? 'error' : 'info';
         Swal.fire({
             icon: type,
             title: type.charAt(0).toUpperCase() + type.slice(1),
@@ -48,11 +48,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Block Filter Auto-Submit
+    // Block Filter Auto-Submit (for forms, not dashboard filters)
     const blockFilters = document.querySelectorAll('select[name="block"]');
     blockFilters.forEach(filter => {
         filter.addEventListener('change', function () {
-            this.form.submit();
+            if (this.form) this.form.submit();
         });
     });
 
@@ -101,11 +101,9 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             dropzone.classList.add('dragover');
         });
-
         dropzone.addEventListener('dragleave', () => {
             dropzone.classList.remove('dragover');
         });
-
         dropzone.addEventListener('drop', (e) => {
             e.preventDefault();
             dropzone.classList.remove('dragover');
@@ -116,7 +114,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 filePreview.textContent = `Selected file: ${files[0].name}`;
             }
         });
-
         fileInput.addEventListener('change', () => {
             if (fileInput.files.length) {
                 filePreview.classList.remove('hidden');
@@ -138,9 +135,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const isDark = document.body.classList.toggle('dark');
             localStorage.setItem('darkMode', isDark);
             updateDarkModeIcon(isDark);
-
             // Send preference to server to persist in session
-            fetch('{% url "toggle_dark_mode" %}', {
+            fetch('/toggle-dark-mode/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -150,11 +146,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }).catch(error => console.error('Error saving dark mode:', error));
         });
     }
-
     function updateDarkModeIcon(isDark) {
-        darkModeIcon.innerHTML = isDark ?
-            '<path d="M12 3v2.25m0 13.5V21m-8.25-9h2.25m13.5 0h-2.25m-9-9l2.25 2.25m4.5 4.5l-2.25 2.25m0-9l-2.25 2.25m4.5 4.5l2.25-2.25"></path>' :  // Sun icon
-            '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';  // Moon icon
+        darkModeIcon.innerHTML = isDark
+            ? '<path d="M12 3v2.25m0 13.5V21m-8.25-9h2.25m13.5 0h-2.25m-9-9l2.25 2.25m4.5 4.5l-2.25 2.25m0-9l-2.25 2.25m4.5 4.5l2.25-2.25"></path>' // Sun icon
+            : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>'; // Moon icon
     }
 
     // Approve/Reject Booking Actions
@@ -164,8 +159,9 @@ document.addEventListener('DOMContentLoaded', function () {
             allowOutsideClick: false,
             didOpen: () => Swal.showLoading()
         });
-
-        const url = action === 'approve' ? `/admin-dashboard/api/bookings/approve/${bookingId}/` : `/admin-dashboard/api/bookings/reject/${bookingId}/`;
+        const url = action === 'approve'
+            ? `/admin-dashboard/api/bookings/approve/${bookingId}/`
+            : `/admin-dashboard/api/bookings/reject/${bookingId}/`;
         fetch(url, {
             method: 'POST',
             headers: {
@@ -173,52 +169,50 @@ document.addEventListener('DOMContentLoaded', function () {
                 'X-CSRFToken': getCSRFToken(),
             },
         })
-        .then(response => response.json())
-        .then(data => {
-            Swal.close();
-            if (data.error) {
+            .then(response => response.json())
+            .then(data => {
+                Swal.close();
+                if (data.error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error,
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: data.message,
+                    });
+                    const row = document.querySelector(`#booking-${bookingId}`);
+                    const statusElement = row.querySelector('.status');
+                    if (statusElement) {
+                        statusElement.textContent = action === 'approve' ? 'Approved' : 'Rejected';
+                        statusElement.className = `status badge ${action === 'approve' ? 'bg-success' : 'bg-danger'}`;
+                    }
+                    // Hide action buttons after approval/rejection
+                    const actionsCell = row.querySelector('td:last-child');
+                    if (actionsCell) {
+                        actionsCell.innerHTML = '';
+                    }
+                }
+            })
+            .catch(error => {
+                Swal.close();
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: data.error,
+                    text: 'An error occurred while processing the request.',
                 });
-            } else {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: data.message,
-                });
-                const row = document.querySelector(`#booking-${bookingId}`);
-                const statusElement = row.querySelector('.status');
-                if (statusElement) {
-                    statusElement.textContent = action === 'approve' ? 'Approved' : 'Rejected';
-                    statusElement.className = `status badge ${action === 'approve' ? 'bg-success' : 'bg-danger'}`;
-                }
-                // Hide action buttons after approval/rejection
-                const actionsCell = row.querySelector('td:last-child');
-                if (actionsCell) {
-                    actionsCell.innerHTML = '';
-                }
-            }
-        })
-        .catch(error => {
-            Swal.close();
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'An error occurred while processing the request.',
+                console.error('Error:', error);
             });
-            console.error('Error:', error);
-        });
     }
-
     document.querySelectorAll('.approve-btn').forEach(button => {
         button.addEventListener('click', (e) => {
             const bookingId = e.target.dataset.bookingId;
             handleBookingAction(bookingId, 'approve');
         });
     });
-
     document.querySelectorAll('.reject-btn').forEach(button => {
         button.addEventListener('click', (e) => {
             const bookingId = e.target.dataset.bookingId;
@@ -226,113 +220,134 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Chart Updates with Filters
-    const ctxUsage = document.getElementById('usageChart');
-    const ctxPeak = document.getElementById('peakHoursChart');
-    const ctxFaculty = document.getElementById('activeFacultyChart');
+    // --- DASHBOARD CHARTS SECTION ---
+
+    // Chart.js chart instances
+    let usageChart = null;
+    let peakHoursChart = null;
+    let activeFacultyChart = null;
+
+    // Get filter elements
     const blockFilter = document.getElementById('blockFilter');
     const dayFilter = document.getElementById('dayFilter');
 
-    let usageChart, peakChart, facultyChart;
+    // Utility to get current filter values
+    function getFilters() {
+        return {
+            block: blockFilter ? blockFilter.value : '',
+            day: dayFilter ? dayFilter.value : ''
+        };
+    }
 
-    function updateChart(ctx, url, type, label, existingChart) {
-        Swal.fire({
-            title: 'Loading...',
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading()
-        });
+    // Utility to build URL with query params
+    function buildUrl(url, params) {
+        const usp = new URLSearchParams();
+        for (const key in params) {
+            if (params[key]) usp.append(key, params[key]);
+        }
+        return url + (usp.toString() ? '?' + usp.toString() : '');
+    }
 
-        fetch(url)
-            .then(res => res.json())
+    // Classroom Usage Chart
+    function loadUsageChart() {
+        const { block, day } = getFilters();
+        fetch(buildUrl('/admin-dashboard/api/stats/usage/', { block, day }))
+            .then(response => response.json())
             .then(data => {
-                Swal.close();
-                if (existingChart) {
-                    existingChart.destroy();
-                }
-                const newChart = new Chart(ctx, {
-                    type: type,
+                const ctx = document.getElementById('usageChart').getContext('2d');
+                if (usageChart) usageChart.destroy();
+                usageChart = new Chart(ctx, {
+                    type: 'bar',
                     data: {
                         labels: data.labels,
                         datasets: [{
-                            label: label,
+                            label: 'Usage Count',
                             data: data.data,
-                            backgroundColor: type === 'line' ? undefined : '#0071E3',
-                            borderColor: type === 'line' ? '#0071E3' : undefined,
-                            fill: type === 'line' ? false : undefined
+                            backgroundColor: 'rgba(54, 162, 235, 0.7)'
                         }]
                     },
                     options: {
                         responsive: true,
-                        scales: {
-                            y: { beginAtZero: true }
-                        }
+                        scales: { y: { beginAtZero: true } }
                     }
                 });
-                return newChart;
             })
-            .catch(error => {
-                Swal.close();
-                console.error(`Chart error for ${label}:`, error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: `Failed to load ${label} chart.`,
-                });
+            .catch(() => {
+                alert('Failed to load Classroom Usage chart.');
             });
     }
 
-    function updateClassroomStatus() {
-        const url = '/admin-dashboard/api/classroom-status/';
-        const params = new URLSearchParams();
-        if (blockFilter && blockFilter.value) params.append('block', blockFilter.value);
-        if (dayFilter && dayFilter.value) params.append('day', dayFilter.value);
-        fetch(`${url}?${params.toString()}`)
-            .then(res => res.json())
+    // Peak Hours Chart
+    function loadPeakHoursChart() {
+        const { day } = getFilters();
+        fetch(buildUrl('/admin-dashboard/api/stats/peakhours/', { day }))
+            .then(response => response.json())
             .then(data => {
-                document.getElementById('emptyClassrooms').textContent = data.empty;
-                document.getElementById('occupiedClassrooms').textContent = data.occupied;
+                const ctx = document.getElementById('peakHoursChart').getContext('2d');
+                if (peakHoursChart) peakHoursChart.destroy();
+                peakHoursChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Classes',
+                            data: data.data,
+                            backgroundColor: 'rgba(255, 159, 64, 0.7)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
             })
-            .catch(error => console.error('Error fetching classroom status:', error));
+            .catch(() => {
+                alert('Failed to load Peak Hours chart.');
+            });
     }
 
-    if (ctxUsage) {
-        function fetchUsage() {
-            let url = '/admin-dashboard/api/stats/usage/';
-            const params = new URLSearchParams();
-            if (blockFilter && blockFilter.value) params.append('block', blockFilter.value);
-            if (dayFilter && dayFilter.value) params.append('day', dayFilter.value);
-            url += `?${params.toString()}`;
-            usageChart = updateChart(ctxUsage, url, 'bar', 'Classroom Usage', usageChart);
-            updateClassroomStatus();
-        }
-        fetchUsage();
-        if (blockFilter) blockFilter.addEventListener('change', fetchUsage);
-        if (dayFilter) dayFilter.addEventListener('change', fetchUsage);
+    // Active Faculty Chart
+    function loadActiveFacultyChart() {
+        const { block } = getFilters();
+        fetch(buildUrl('/admin-dashboard/api/stats/faculty/', { block }))
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById('activeFacultyChart').getContext('2d');
+                if (activeFacultyChart) activeFacultyChart.destroy();
+                activeFacultyChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Active Classes',
+                            data: data.data,
+                            backgroundColor: 'rgba(75, 192, 192, 0.7)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            })
+            .catch(() => {
+                alert('Failed to load Active Faculty chart.');
+            });
     }
 
-    if (ctxPeak) {
-        function fetchPeak() {
-            let url = '/admin-dashboard/api/stats/peakhours/';
-            const params = new URLSearchParams();
-            if (dayFilter && dayFilter.value) params.append('day', dayFilter.value);
-            url += `?${params.toString()}`;
-            peakChart = updateChart(ctxPeak, url, 'line', 'Peak Hours', peakChart);
-        }
-        fetchPeak();
-        if (dayFilter) dayFilter.addEventListener('change', fetchPeak);
+    // Load all charts
+    function loadAllCharts() {
+        loadUsageChart();
+        loadPeakHoursChart();
+        loadActiveFacultyChart();
     }
 
-    if (ctxFaculty) {
-        function fetchFaculty() {
-            let url = '/admin-dashboard/api/stats/faculty/';
-            const params = new URLSearchParams();
-            if (blockFilter && blockFilter.value) params.append('block', blockFilter.value);
-            url += `?${params.toString()}`;
-            facultyChart = updateChart(ctxFaculty, url, 'bar', 'Faculty Activity', facultyChart);
-        }
-        fetchFaculty();
-        if (blockFilter) blockFilter.addEventListener('change', fetchFaculty);
-    }
+    // Attach filter change event handlers
+    if (blockFilter) blockFilter.addEventListener('change', loadAllCharts);
+    if (dayFilter) dayFilter.addEventListener('change', loadAllCharts);
+
+    // Initial load
+    loadAllCharts();
 
     // Helper function to get CSRF token
     function getCSRFToken() {
@@ -343,3 +358,4 @@ document.addEventListener('DOMContentLoaded', function () {
         return cookieValue || '';
     }
 });
+
