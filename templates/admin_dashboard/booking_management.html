@@ -1,11 +1,15 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block title %}Booking Management{% endblock %}
+
 {% block content %}
 <div class="container mx-auto p-6">
     <h1 class="text-3xl font-bold mb-6">Booking Management</h1>
-    <table class="w-full">
+    <table class="table w-full">
         <thead>
             <tr>
+                <th>ID</th>
                 <th>User</th>
                 <th>Classroom</th>
                 <th>Date</th>
@@ -16,23 +20,32 @@
         </thead>
         <tbody>
             {% for booking in bookings %}
-            <tr>
+            <tr id="booking-{{ booking.id }}">
+                <td>{{ booking.id }}</td>
                 <td>{{ booking.user.username }}</td>
                 <td>{{ booking.classroom.name }}</td>
                 <td>{{ booking.date }}</td>
                 <td>{{ booking.start_time }} - {{ booking.end_time }}</td>
-                <td>{{ booking.status }}</td>
                 <td>
-                    <a href="{% url 'admin_dashboard:approve-booking' booking.id %}" class="btn btn-primary btn-sm">Approve</a>
-                    <a href="{% url 'admin_dashboard:reject-booking' booking.id %}" class="btn btn-danger btn-sm">Reject</a>
+                    <span class="status badge {% if booking.status == 'approved' %}bg-success{% elif booking.status == 'rejected' %}bg-danger{% else %}bg-warning{% endif %}">
+                        {{ booking.status|capfirst }}
+                    </span>
+                </td>
+                <td>
+                    {% if booking.status == 'pending' %}
+                    <button class="btn btn-primary btn-sm approve-btn" data-booking-id="{{ booking.id }}">Approve</button>
+                    <button class="btn btn-danger btn-sm reject-btn" data-booking-id="{{ booking.id }}">Reject</button>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="6" class="text-center">No bookings found.</td>
+                <td colspan="7" class="text-center">No bookings found.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
+<script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}
