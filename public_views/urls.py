@@ -14,4 +14,3 @@ urlpatterns = [
     path('availability/', availability_view, name='public-availability'),
     path('api/classrooms/', public_classroom_list, name='public-api-classroom-list'),
 ]
-
