@@ -16,4 +16,3 @@ urlpatterns = [
     path('events/create/', event_create_view, name='event-create'),
     path('events/', event_list_view, name='event-list'),
 ]
-
