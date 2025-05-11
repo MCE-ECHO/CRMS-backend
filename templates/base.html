@@ -1,27 +1,74 @@
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Classroom Booking System{% endblock %}</title>
+    <!-- Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+    <!-- FullCalendar CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.css">
+    <!-- Static CSS -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     {% block extra_css %}{% endblock %}
 </head>
-<body>
-    {% include "partials/navbar.html" %}
-    <button id="darkModeToggle" class="btn btn-secondary fixed top-4 right-4">Toggle Dark Mode</button>
+<body class="{% if request.session.dark_mode %}dark{% endif %}">
+    <!-- Navbar -->
+    {% include 'partials/navbar.html' %}
+
+    <!-- Sidebar Toggle Button -->
+    <button class="sidebar-toggle">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
+
+    <!-- Main Content -->
     <main>
+        <!-- Messages -->
         {% if messages %}
         <div class="messages">
             {% for message in messages %}
-            <div class="message {{ message.tags }}">{{ message }}</div>
+            <div class="message {% if message.tags == 'success' %}success{% elif message.tags == 'error' %}error{% else %}info{% endif %}">
+                {{ message }}
+            </div>
             {% endfor %}
         </div>
         {% endif %}
+
+        <!-- Dark Mode Toggle -->
+        <div class="dark-mode-toggle fixed top-4 right-4 z-50">
+            <button id="darkModeToggle" class="btn btn-sm btn-secondary">
+                <svg id="darkModeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Page Content -->
         {% block content %}{% endblock %}
     </main>
-    <script src="{% static 'js/global.js' %}"></script>
+
+    <!-- Footer -->
+    {% include 'partials/footer.html' %}
+
+    <!-- Scripts -->
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.js"></script>
+    <!-- Define Dark Mode URL for JavaScript -->
+    <script>
+        window.TOGGLE_DARK_MODE_URL = "{% url 'toggle_dark_mode' %}";
+    </script>
+    <!-- Static JS -->
+    <script src="{% static 'js/dashboard.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
