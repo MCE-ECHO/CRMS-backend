@@ -8,25 +8,13 @@ from rest_framework import status
 from rest_framework.permissions import IsAdminUser
 from .models import Booking
 from .serializers import BookingSerializer
-from classroom.models import Classroom
 from accounts.utils import is_admin
-from django import forms
-
-class BookingForm(forms.ModelForm):
-    class Meta:
-        model = Booking
-        fields = ['classroom', 'date', 'start_time', 'end_time']
-        widgets = {
-            'classroom': forms.Select(attrs={'class': 'w-full p-3 border rounded-lg'}),
-            'date': forms.DateInput(attrs={'class': 'w-full p-3 border rounded-lg', 'type': 'date'}),
-            'start_time': forms.TimeInput(attrs={'class': 'w-full p-3 border rounded-lg', 'type': 'time'}),
-            'end_time': forms.TimeInput(attrs={'class': 'w-full p-3 border rounded-lg', 'type': 'time'}),
-        }
+from . import forms
 
 @login_required
 def booking_create_view(request):
     if request.method == 'POST':
-        form = BookingForm(request.POST)
+        form = forms.BookingForm(request.POST)
         if form.is_valid():
             booking = form.save(commit=False)
             booking.user = request.user
@@ -42,11 +30,11 @@ def booking_create_view(request):
             else:
                 booking.save()
                 messages.success(request, 'Booking request submitted successfully.')
-            return redirect('booking:booking-list')
+                return redirect('booking:booking-list')
         else:
             messages.error(request, 'Error creating booking. Please check the form.')
     else:
-        form = BookingForm()
+        form = forms.BookingForm()
     return render(request, 'booking/booking_form.html', {'form': form})
 
 @login_required
@@ -56,7 +44,6 @@ def booking_list_view(request):
 
 class BookingListView(APIView):
     permission_classes = [IsAdminUser]
-
     def get(self, request):
         bookings = Booking.objects.select_related('user', 'classroom').all()
         serializer = BookingSerializer(bookings, many=True)
@@ -83,4 +70,3 @@ def reject_booking(request, pk):
         return Response({'message': 'Booking rejected'}, status=status.HTTP_200_OK)
     except Booking.DoesNotExist:
         return Response({'error': 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
-
