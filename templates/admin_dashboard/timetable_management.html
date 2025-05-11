@@ -1,16 +1,34 @@
 {% extends 'base.html' %}
-
 {% block title %}Timetable Management{% endblock %}
-
 {% block content %}
 <div class="container mx-auto p-6">
     <h1 class="text-3xl font-bold mb-6">Timetable Management</h1>
     <div class="flex justify-between mb-4">
-        <a href="{% url 'admin_dashboard:add-timetable' %}" class="btn btn-primary">Add Timetable</a>
-        <button onclick="exportCSV()" class="btn btn-secondary">Export CSV</button>
+        <a href="{% url 'admin_dashboard:upload-timetable' %}" class="btn btn-primary">Upload Timetable</a>
+        <button onclick="window.location.href='/admin-dashboard/api/export-csv/'" class="btn btn-secondary">Export CSV</button>
     </div>
-    <div id="timetableLoading" class="text-center">Loading timetable...</div>
-    <table id="timetableTable" class="w-full hidden">
+    <form method="get" class="flex gap-4 mb-6">
+        <select name="block" class="w-full p-3 border rounded-lg">
+            <option value="">All Blocks</option>
+            {% for block in blocks %}
+            <option value="{{ block.name }}" {% if request.GET.block == block.name %}selected{% endif %}>{{ block.name }}</option>
+            {% endfor %}
+        </select>
+        <select name="classroom" class="w-full p-3 border rounded-lg">
+            <option value="">All Classrooms</option>
+            {% for classroom in classrooms %}
+            <option value="{{ classroom.name }}" {% if request.GET.classroom == classroom.name %}selected{% endif %}>{{ classroom.name }}</option>
+            {% endfor %}
+        </select>
+        <select name="day" class="w-full p-3 border rounded-lg">
+            <option value="">All Days</option>
+            {% for day in days %}
+            <option value="{{ day }}" {% if request.GET.day == day %}selected{% endif %}>{{ day }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </form>
+    <table class="w-full">
         <thead>
             <tr>
                 <th>Day</th>
@@ -18,7 +36,6 @@
                 <th>End Time</th>
                 <th>Classroom</th>
                 <th>Teacher</th>
-                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -29,21 +46,13 @@
                 <td>{{ timetable.end_time }}</td>
                 <td>{{ timetable.classroom.name }}</td>
                 <td>{{ timetable.teacher.username }}</td>
-                <td>
-                    <a href="{% url 'admin_dashboard:update-timetable' timetable.id %}" class="btn btn-primary btn-sm">Edit</a>
-                    <a href="{% url 'admin_dashboard:delete-timetable' timetable.id %}" class="btn btn-danger btn-sm">Delete</a>
-                </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="6" class="text-center">No timetable entries found.</td>
+                <td colspan="5" class="text-center">No timetable entries found.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}
