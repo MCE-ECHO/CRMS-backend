@@ -1,7 +1,5 @@
 {% extends 'base.html' %}
-
 {% block title %}Create Event{% endblock %}
-
 {% block content %}
 <div class="container mx-auto p-6">
     <h1 class="text-3xl font-bold mb-6">Create Event</h1>
@@ -9,7 +7,7 @@
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit" class="btn btn-primary">Create Event</button>
-        <a href="{% url 'accounts:teacher-dashboard' %}" class="btn btn-secondary">Cancel</a>
+        <a href="{% url 'accounts:event-list' %}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
 {% endblock %}
