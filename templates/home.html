@@ -4,7 +4,18 @@
 <div class="hero">
     <h1>Welcome to Classroom Booking System</h1>
     <p>Book classrooms, manage timetables, and stay updated with events.</p>
-    {% if not user.is_authenticated %}
+    {% if user.is_authenticated %}
+    <div class="mt-4 space-x-4">
+        {% if user.is_superuser %}
+        <a href="{% url 'admin_dashboard:admin-dashboard' %}" class="btn btn-primary">Go to Admin Dashboard</a>
+        {% elif user.is_staff %}
+        <a href="{% url 'accounts:teacher-dashboard' %}" class="btn btn-primary">Go to Teacher Dashboard</a>
+        {% else %}
+        <a href="{% url 'public_views:public-student-portal' %}" class="btn btn-primary">Go to Student Portal</a>
+        {% endif %}
+        <a href="{% url 'booking:booking-list' %}" class="btn btn-secondary">View My Bookings</a>
+    </div>
+    {% else %}
     <a href="{% url 'login' %}" class="btn btn-primary mt-4">Login to Get Started</a>
     {% endif %}
 </div>
