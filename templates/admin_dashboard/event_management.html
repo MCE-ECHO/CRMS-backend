@@ -1,11 +1,14 @@
 {% extends 'base.html' %}
-
+{% load static %}
 {% block title %}Event Management{% endblock %}
-
 {% block content %}
 <div class="container mx-auto p-6">
     <h1 class="text-3xl font-bold mb-6">Event Management</h1>
     <a href="{% url 'admin_dashboard:event-create' %}" class="btn btn-primary mb-4">Create Event</a>
+    <div class="card mb-6">
+        <h3>Event Calendar</h3>
+        <div id="calendar" class="calendar-container"></div>
+    </div>
     <table class="w-full">
         <thead>
             <tr>
@@ -29,4 +32,11 @@
         </tbody>
     </table>
 </div>
+{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.css" rel="stylesheet">
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.js"></script>
+<script src="{% static 'js/calendar.js' %}"></script>
 {% endblock %}
