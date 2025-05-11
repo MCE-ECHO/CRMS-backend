@@ -4,6 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from accounts.views import home_redirect_view
 from django.contrib.auth import views as auth_views
+from CLASSROOMS.views import toggle_dark_mode  # <-- Add this import
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -16,8 +17,10 @@ urlpatterns = [
     path('timetable/', include('timetable.urls', namespace='timetable')),
     path('booking/', include('booking.urls', namespace='booking')),
     path('', home_redirect_view, name='home'),
+    path('toggle-dark-mode/', toggle_dark_mode, name='toggle_dark_mode'),  # <-- Add this line
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
