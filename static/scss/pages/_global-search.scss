@@ -1,0 +1,76 @@
+@use "../index" as *;
+
+body {
+    color: $primary;
+
+    .searchbar {
+        h1 {
+            font-family: $main_font;
+            font-weight: $fregular;
+        }
+        form input {
+            @include special-design(38.25rem, 3.4375rem, $accent);
+            border-width: 3px;
+            &::placeholder {
+                font-family: $main_font;
+            }
+        }
+    }
+    .recommendation {
+        h4 {
+            font-family: $main_font;
+            font-weight: $flight;
+            font-size: 1.25rem;
+        }
+        &__list {
+        }
+    }
+    .filters {
+        h2 {
+            font-family: $main_font;
+            font-weight: $fregular;
+            font-size: 1rem;
+            @include special-design(10rem, 2.5rem, $accent);
+
+            img {
+            }
+        }
+        &__body {
+            @include special-design(19rem, 43.1875rem, $primary);
+            h4 {
+                font-family: $main_font;
+                font-weight: $fregular;
+            }
+            &__block {
+            }
+            &__status {
+            }
+            &__date {
+            }
+            &__time {
+            }
+        }
+    }
+}
+
+//grids...!!
+
+body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+    padding-left: 3rem;
+    padding-right: 3rem;
+
+    .searchbar {
+        grid-column: 1 / 3;
+    }
+    .recommendation {
+        grid-column: 1 / 2;
+    }
+    .filters {
+        grid-column: 2/3;
+        justify-self: end;
+        align-self: start;
+    }
+}

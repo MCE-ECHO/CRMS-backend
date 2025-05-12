@@ -1,0 +1,29 @@
+@use "../index" as *;
+
+//style
+.faculty-auth{
+    background-color: $background;
+    &__title{
+        p{
+            font-family: $main_font;
+            color:$primary;
+            font-size: 3.6875rem;
+            font-weight: $fregular;
+            text-transform: uppercase;
+        }
+        span{
+            color:$primary;
+            font-weight: $flight;
+            font-family: $main_font;
+            font-size: 1.5rem;
+        }
+    &__faculty-login{
+        form{
+            input{
+                font-family: $main_font;
+            }
+
+        }
+    }
+    }
+}

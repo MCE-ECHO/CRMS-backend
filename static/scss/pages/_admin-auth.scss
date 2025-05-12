@@ -1,0 +1,79 @@
+@use "../index" as *;
+
+//style
+.admin-auth {
+    background-color: $background;
+    &__title {
+        p {
+            color: $primary;
+            font-family: $main_font;
+            font-weight: $fregular;
+            font-size: 3.6875rem;
+            text-transform: uppercase;
+        }
+    }
+    img {
+        width: 21.875rem;
+        height: 44.625rem;
+    }
+    &__admin-login {
+        form {
+            input {
+                background-color: $primary;
+                width: 36.125rem;
+                height: 3.875rem;
+                font-family: $main_font;
+                font-weight: $fregular;
+                font-size: 1.875rem;
+                border-radius: 1.25rem;
+                &::placeholder {
+                    border-radius: 1.25rem;
+                    text-align: center;
+                }
+            }
+            button {
+                background-color: $primary;
+                width: 15.125rem;
+                height: 3.875rem;
+                font-family: $main_font;
+                font-weight: $fregular;
+                font-size: 1.875rem;
+                color: $text;
+            }
+        }
+    }
+}
+
+//GRIDS
+.auth {
+    margin: 0px !important;
+}
+.admin-auth {
+    display: flex !important;
+    height: 100vh;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transform: translateY(-2rem);
+    &__title {
+        display: inline;
+        p {
+            width: 37.5rem;
+        }
+        span {
+            padding-left: 1rem;
+        }
+    }
+    &__admin-login {
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+        button {
+            border-radius: 1.25rem;
+            align-self: flex-end;
+            @include button-animation($primary,$accent);
+        }
+    }
+}
