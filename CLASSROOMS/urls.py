@@ -6,7 +6,6 @@ from accounts.views import home_redirect_view
 from django.contrib.auth import views as auth_views
 from CLASSROOMS.views import toggle_dark_mode  # <-- Add this import
 
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
@@ -18,7 +17,7 @@ urlpatterns = [
     path('timetable/', include('timetable.urls', namespace='timetable')),
     path('booking/', include('booking.urls', namespace='booking')),
     path('', home_redirect_view, name='home'),
-    path("__reload__/", include("django_browser_reload.urls")),
+    path('toggle-dark-mode/', toggle_dark_mode, name='toggle_dark_mode'),  # <-- Add this line
 ]
 
 if settings.DEBUG:
