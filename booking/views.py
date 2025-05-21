@@ -2,14 +2,13 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from .models import Booking
 from .serializers import BookingSerializer
 from accounts.utils import is_admin
-from accounts.forms import BookingForm  # Corrected import
 
 @login_required
 def booking_create_view(request):
@@ -63,8 +62,50 @@ class BookingListView(APIView):
         serializer = BookingSerializer(bookings, many=True)
         return Response(serializer.data)
 
+class UserBookingListView(APIView):
+    """
+    API endpoint for users to view their own bookings.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        bookings = Booking.objects.filter(user=request.user).select_related('classroom')
+        serializer = BookingSerializer(bookings, many=True)
+        return Response(serializer.data)
+
+class BookingCreateView(APIView):
+    """
+    API endpoint for users to create a booking.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = BookingSerializer(data=request.data)
+        if serializer.is_valid():
+            # Check for conflicts
+            classroom = serializer.validated_data['classroom']
+            date = serializer.validated_data['date']
+            start_time = serializer.validated_data['start_time']
+            end_time = serializer.validated_data['end_time']
+            conflicts = Booking.objects.filter(
+                classroom=classroom,
+                date=date,
+                start_time__lt=end_time,
+                end_time__gt=start_time,
+                status='approved'
+            )
+            if conflicts.exists():
+                return Response({'error': 'This classroom is already booked for the selected time.'}, status=status.HTTP_400_BAD_REQUEST)
+            # Set user and status
+            booking = serializer.save(
+                user=request.user,
+                status='approved' if request.user.is_staff else 'pending'
+            )
+            return Response(BookingSerializer(booking).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 @api_view(['POST'])
-@user_passes_test(is_admin)
+@permission_classes([IsAdminUser])
 def approve_booking(request, pk):
     """
     API endpoint for admins to approve a booking.
@@ -78,7 +119,7 @@ def approve_booking(request, pk):
         return Response({'error': 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['POST'])
-@user_passes_test(is_admin)
+@permission_classes([IsAdminUser])
 def reject_booking(request, pk):
     """
     API endpoint for admins to reject a booking.

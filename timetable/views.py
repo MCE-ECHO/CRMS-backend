@@ -1,13 +1,13 @@
 from django.shortcuts import render
-from django.contrib.auth.decorators import login_required, user_passes_test
-from rest_framework.decorators import api_view
+from django.contrib.auth.decorators import login_required
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAdminUser
 import csv
 from django.http import HttpResponse
 from .models import Timetable
 from .serializers import TimetableSerializer
-from accounts.utils import is_admin
 
 @login_required
 def timetable_view(request):
@@ -16,12 +16,15 @@ def timetable_view(request):
 
 @api_view(['GET'])
 def all_timetables(request):
+    """
+    List all timetable entries.
+    """
     entries = Timetable.objects.select_related('classroom', 'teacher').all()
     serializer = TimetableSerializer(entries, many=True)
     return Response(serializer.data)
 
 @api_view(['POST'])
-@user_passes_test(is_admin)
+@permission_classes([IsAdminUser])
 def add_timetable(request):
     serializer = TimetableSerializer(data=request.data)
     if serializer.is_valid():
@@ -30,7 +33,7 @@ def add_timetable(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['PUT'])
-@user_passes_test(is_admin)
+@permission_classes([IsAdminUser])
 def update_timetable(request, pk):
     try:
         timetable = Timetable.objects.get(pk=pk)
@@ -43,7 +46,7 @@ def update_timetable(request, pk):
         return Response({'error': 'Timetable not found'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['DELETE'])
-@user_passes_test(is_admin)
+@permission_classes([IsAdminUser])
 def delete_timetable(request, pk):
     try:
         timetable = Timetable.objects.get(pk=pk)
@@ -53,8 +56,11 @@ def delete_timetable(request, pk):
         return Response({'error': 'Timetable not found'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
-@user_passes_test(is_admin)
+@permission_classes([IsAdminUser])
 def export_timetable(request):
+    """
+    Export all timetable entries as CSV.
+    """
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="timetable_export.csv"'
     writer = csv.writer(response)

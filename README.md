@@ -2,7 +2,7 @@
 
 [![Django](https://img.shields.io/badge/Django-4.2-brightgreen)](https://www.djangoproject.com/)
 [![DRF](https://img.shields.io/badge/Django_REST-3.15-blue)](https://www.django-rest-framework.org/)
-[![GitHub Issues](https://img.shields.io/badge/Report_Issues-Here-red)](https://github.com/Rakshak-D/CLASSROOMS/issues)
+[![GitHub Issues](https://img.shields.io/badge/Report_Issues-Here-red)](https://github.com/Rakshak-D/config/issues)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A comprehensive Django-based solution for optimizing classroom resource management, featuring real-time analytics, conflict-free booking system, and multi-role access control.
@@ -54,8 +54,8 @@ A comprehensive Django-based solution for optimizing classroom resource manageme
 
 ```bash
 # Clone repository
-git clone https://github.com/Rakshak-D/CLASSROOMS.git
-cd CLASSROOMS
+git clone https://github.com/Rakshak-D/config.git
+cd config
 
 # Set up environment
 python -m venv .venv
@@ -143,7 +143,7 @@ sequenceDiagram
 ## 📂 Repository Structure
 
 ```
-CLASSROOMS/
+config/
 ├── accounts/          # Authentication system
 │   ├── models/        # Custom user models
 │   ├── auth/          # Authentication backends
@@ -189,7 +189,7 @@ python-dateutil==2.9.0
 
 ## 🐛 Issue Reporting
 
-[![GitHub Issues](https://img.shields.io/badge/Report_Issues-Here-red)](https://github.com/Rakshak-D/CLASSROOMS/issues)
+[![GitHub Issues](https://img.shields.io/badge/Report_Issues-Here-red)](https://github.com/Rakshak-D/config/issues)
 
 **Bug Report Template:**
 ```markdown

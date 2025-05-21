@@ -3,12 +3,23 @@ from .models import Timetable
 from classroom.models import Classroom
 from django.contrib.auth.models import User
 
+class ClassroomSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Classroom
+        fields = ['id', 'name']
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name']
+
 class TimetableSerializer(serializers.ModelSerializer):
-    classroom = serializers.SlugRelatedField(slug_field='name', queryset=Classroom.objects.all())
-    teacher = serializers.SlugRelatedField(slug_field='username', queryset=User.objects.all())
-    start_time = serializers.TimeField(format='%H:%M')
-    end_time = serializers.TimeField(format='%H:%M')
+    classroom = ClassroomSerializer(read_only=True)
+    teacher = UserSerializer(read_only=True)
 
     class Meta:
         model = Timetable
-        fields = ['id', 'day', 'start_time', 'end_time', 'classroom', 'teacher', 'subject_name']
+        fields = [
+            'id', 'classroom', 'teacher', 'day',
+            'start_time', 'end_time', 'subject_name'
+        ]

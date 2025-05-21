@@ -1,19 +1,18 @@
 from datetime import datetime
 import csv
 import pandas as pd
-from django.contrib import messages
-from django.contrib.auth.decorators import user_passes_test
+
 from django.contrib.auth.models import User
+from django.utils import timezone
 from django.db.models import Count
 from django.db.models.functions import ExtractHour
 from django.http import HttpResponse
-from django.shortcuts import render, redirect, get_object_or_404
-from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import user_passes_test
 
-from rest_framework import serializers, status
-from rest_framework.decorators import api_view
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -21,120 +20,34 @@ from rest_framework.views import APIView
 
 from accounts.models import Event
 from accounts.serializers import EventSerializer
-from accounts.utils import is_admin
 from booking.models import Booking
 from booking.serializers import BookingSerializer
 from classroom.models import Block, Classroom
 from timetable.models import Timetable
-from .forms import EventForm
+from accounts.utils import is_admin
 
-# --- Serializers ---
-class TimetableSerializer(serializers.ModelSerializer):
-    classroom = serializers.PrimaryKeyRelatedField(queryset=Classroom.objects.all())
-    teacher = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_staff=True))
-    class Meta:
-        model = Timetable
-        fields = '__all__'
+# --- API Views Only ---
 
-# --- Admin Dashboard Views ---
-@user_passes_test(is_admin)
-def admin_dashboard_view(request):
-    total_classrooms = Classroom.objects.count()
-    empty_classrooms = Classroom.objects.filter(status='free').count()
-    occupied_classrooms = Classroom.objects.filter(status='occupied').count()
-    pending_bookings = Booking.objects.filter(status='pending').count()
-    upcoming_events = Event.objects.filter(start_date__gte=datetime.now()).select_related('created_by').order_by('start_date')[:5]
-    blocks = Block.objects.all()
-    days = [choice[0] for choice in Timetable.DAY_CHOICES]
-    context = {
-        'total_classrooms': total_classrooms,
-        'empty_classrooms': empty_classrooms,
-        'occupied_classrooms': occupied_classrooms,
-        'pending_bookings': pending_bookings,
-        'upcoming_events': upcoming_events,
-        'blocks': blocks,
-        'days': days,
-    }
-    return render(request, 'admin_dashboard/dashboard.html', context)
+class DashboardStatsView(APIView):
+    permission_classes = [IsAdminUser]
+    def get(self, request):
+        total_classrooms = Classroom.objects.count()
+        empty_classrooms = Classroom.objects.filter(status='free').count()
+        occupied_classrooms = Classroom.objects.filter(status='occupied').count()
+        pending_bookings = Booking.objects.filter(status='pending').count()
+        upcoming_events = Event.objects.filter(start_date__gte=datetime.now()).select_related('created_by').order_by('start_date')[:5]
+        blocks = Block.objects.all()
+        days = [choice[0] for choice in Timetable.DAY_CHOICES]
+        return Response({
+            'total_classrooms': total_classrooms,
+            'empty_classrooms': empty_classrooms,
+            'occupied_classrooms': occupied_classrooms,
+            'pending_bookings': pending_bookings,
+            'upcoming_events': EventSerializer(upcoming_events, many=True).data,
+            'blocks': [{'id': b.id, 'name': b.name} for b in blocks],
+            'days': days,
+        })
 
-@user_passes_test(is_admin)
-def upload_timetable(request):
-    if request.method == 'POST':
-        file = request.FILES.get('file')
-        if file and file.name.endswith(('.csv', '.xlsx')):
-            request.FILES['file'] = file
-            response = TimetableUploadView.as_view()(request)
-            if response.status_code == status.HTTP_201_CREATED:
-                messages.success(request, response.data['message'])
-            elif response.status_code == status.HTTP_207_MULTI_STATUS:
-                messages.warning(request, f"{response.data['message']}. Errors: {'; '.join(response.data['errors'])}")
-            else:
-                messages.error(request, response.data.get('error', 'Upload failed.'))
-        else:
-            messages.error(request, 'Please upload a valid CSV or Excel file.')
-        return redirect('admin_dashboard:admin-dashboard')
-    return redirect('admin_dashboard:admin-dashboard')
-
-@user_passes_test(is_admin)
-def timetable_management(request):
-    timetables = Timetable.objects.select_related('classroom', 'teacher').all()
-    block = request.GET.get('block')
-    classroom = request.GET.get('classroom')
-    day = request.GET.get('day')
-    if block:
-        timetables = timetables.filter(classroom__block__name__icontains=block)
-    if classroom:
-        timetables = timetables.filter(classroom__name__icontains=classroom)
-    if day:
-        timetables = timetables.filter(day=day)
-    context = {
-        'timetables': timetables,
-        'blocks': Block.objects.all(),
-        'classrooms': Classroom.objects.all(),
-        'days': [choice[0] for choice in Timetable.DAY_CHOICES],
-    }
-    return render(request, 'admin_dashboard/timetable_management.html', context)
-
-@user_passes_test(is_admin)
-def booking_management(request):
-    bookings = Booking.objects.select_related('user', 'classroom').all()
-    return render(request, 'admin_dashboard/booking_management.html', {'bookings': bookings})
-
-@user_passes_test(is_admin)
-def event_management(request):
-    events = Event.objects.all()
-    return render(request, 'admin_dashboard/event_management.html', {'events': events})
-
-@user_passes_test(is_admin)
-def event_create_view(request):
-    if request.method == 'POST':
-        form = EventForm(request.POST)
-        if form.is_valid():
-            event = form.save(commit=False)
-            event.created_by = request.user
-            event.save()
-            messages.success(request, 'Event created successfully.')
-            return redirect('admin_dashboard:event-management')
-    else:
-        form = EventForm()
-    return render(request, 'admin_dashboard/event_create.html', {'form': form})
-
-@user_passes_test(is_admin)
-def event_list_view(request):
-    events = Event.objects.all()
-    return render(request, 'admin_dashboard/event_list.html', {'events': events})
-
-@user_passes_test(is_admin)
-def empty_classrooms_view(request):
-    classrooms = Classroom.objects.filter(status='free')
-    return render(request, 'admin_dashboard/classroom_list.html', {'classrooms': classrooms, 'title': 'Empty Classrooms'})
-
-@user_passes_test(is_admin)
-def occupied_classrooms_view(request):
-    classrooms = Classroom.objects.filter(status='occupied')
-    return render(request, 'admin_dashboard/classroom_list.html', {'classrooms': classrooms, 'title': 'Occupied Classrooms'})
-
-# --- API Views ---
 class TimetableUploadView(APIView):
     parser_classes = [MultiPartParser]
     permission_classes = [IsAdminUser]
@@ -187,13 +100,14 @@ class TimetableUploadView(APIView):
             return Response({"error": f"Failed to process file: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-@user_passes_test(is_admin)
+@permission_classes([IsAdminUser])
 def all_timetables(request):
     entries = Timetable.objects.select_related('classroom', 'teacher').all()
-    return Response(TimetableSerializer(entries, many=True).data)
+    serializer = TimetableSerializer(entries, many=True)
+    return Response(serializer.data)
 
 @api_view(['POST'])
-@user_passes_test(is_admin)
+@permission_classes([IsAdminUser])
 def add_timetable(request):
     serializer = TimetableSerializer(data=request.data)
     if serializer.is_valid():
@@ -202,7 +116,7 @@ def add_timetable(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['PUT'])
-@user_passes_test(is_admin)
+@permission_classes([IsAdminUser])
 def update_timetable(request, pk):
     try:
         entry = Timetable.objects.get(pk=pk)
@@ -215,7 +129,7 @@ def update_timetable(request, pk):
         return Response({'error': 'Timetable entry not found'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['DELETE'])
-@user_passes_test(is_admin)
+@permission_classes([IsAdminUser])
 def delete_timetable(request, pk):
     try:
         Timetable.objects.get(pk=pk).delete()
