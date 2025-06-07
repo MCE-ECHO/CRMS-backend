@@ -16,10 +16,13 @@ class ClassroomSerializer(serializers.ModelSerializer):
 class BookingSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     classroom = ClassroomSerializer(read_only=True)
+    classroom_id = serializers.PrimaryKeyRelatedField(
+        queryset=Classroom.objects.all(), source='classroom', write_only=True
+    )
 
     class Meta:
         model = Booking
         fields = [
-            'id', 'user', 'classroom', 'date',
+            'id', 'user', 'classroom', 'classroom_id', 'date',
             'start_time', 'end_time', 'status', 'created_at'
         ]

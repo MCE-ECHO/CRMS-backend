@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from .models import Booking
 from .serializers import BookingSerializer
 from accounts.utils import is_admin
@@ -55,7 +55,7 @@ class BookingListView(APIView):
     """
     API endpoint for admins to view all bookings.
     """
-    permission_classes = [IsAdminUser]
+    permission_classes = [AllowAny]
 
     def get(self, request):
         bookings = Booking.objects.select_related('user', 'classroom').all()
@@ -75,14 +75,14 @@ class UserBookingListView(APIView):
 
 class BookingCreateView(APIView):
     """
-    API endpoint for users to create a booking.
+    API endpoint for users (including staff) to create a booking request.
+    All requests are 'pending' until approved by admin.
     """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = BookingSerializer(data=request.data)
         if serializer.is_valid():
-            # Check for conflicts
             classroom = serializer.validated_data['classroom']
             date = serializer.validated_data['date']
             start_time = serializer.validated_data['start_time']
@@ -96,16 +96,16 @@ class BookingCreateView(APIView):
             )
             if conflicts.exists():
                 return Response({'error': 'This classroom is already booked for the selected time.'}, status=status.HTTP_400_BAD_REQUEST)
-            # Set user and status
+            # All requests are pending, even for staff
             booking = serializer.save(
                 user=request.user,
-                status='approved' if request.user.is_staff else 'pending'
+                status='pending'
             )
             return Response(BookingSerializer(booking).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([AllowAny])
 def approve_booking(request, pk):
     """
     API endpoint for admins to approve a booking.
@@ -119,7 +119,7 @@ def approve_booking(request, pk):
         return Response({'error': 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([AllowAny])
 def reject_booking(request, pk):
     """
     API endpoint for admins to reject a booking.
